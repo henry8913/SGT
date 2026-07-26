@@ -18,19 +18,23 @@ def seed_database():
 
     if app_settings.admin__enable:
         admin_username = app_settings.admin__username.split("@")[0] if "@" in app_settings.admin__username else app_settings.admin__username
+        admin_password_hash = bcrypt.hashpw(app_settings.admin__password.encode(), bcrypt.gensalt()).decode()
         admin = db.query(User).filter(User.username == admin_username).first()
-        if not admin:
+        if admin:
+            admin.email = app_settings.admin__username
+            admin.hashed_password = admin_password_hash
+            admin.is_admin = True
+            print(f"Updated admin user ({admin_username})")
+        else:
             admin = User(
                 email=app_settings.admin__username,
                 username=admin_username,
-                hashed_password=bcrypt.hashpw(app_settings.admin__password.encode(), bcrypt.gensalt()).decode(),
+                hashed_password=admin_password_hash,
                 is_admin=True,
             )
             db.add(admin)
-            db.commit()
-            print(f"Created admin user ({admin_username} / {app_settings.admin__password})")
-        else:
-            print(f"Admin user ({admin_username}) already exists")
+            print(f"Created admin user ({admin_username})")
+        db.commit()
 
     if db.query(Formula).count() == 0:
         sample_formulas = [
