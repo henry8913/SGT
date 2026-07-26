@@ -14,7 +14,8 @@ export default function Login() {
       const res = await auth.login(form);
       localStorage.setItem('token', res.data.access_token);
       const payload = JSON.parse(atob(res.data.access_token.split('.')[1]));
-      localStorage.setItem('user', JSON.stringify({ username: form.username, is_admin: payload.admin }));
+      const isAdmin = payload.admin === true;
+      localStorage.setItem('user', JSON.stringify({ username: form.username, is_admin: isAdmin }));
       navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.detail || 'Errore di login');

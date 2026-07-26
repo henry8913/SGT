@@ -25,11 +25,9 @@ export default function SettingsProfili() {
     <div>
       <h2 style={{ marginBottom: 16 }}>Impostazioni</h2>
 
-      {user.is_admin && (
-        <div style={{ marginBottom: 24 }}>
-          <ExcelUpload />
-        </div>
-      )}
+      <div style={{ marginBottom: 24 }}>
+        <ExcelUpload />
+      </div>
 
       <h3 style={{ marginBottom: 12 }}>Libreria Profili</h3>
       <p style={{ color: '#666', marginBottom: 24, fontSize: 14 }}>

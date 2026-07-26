@@ -2,10 +2,19 @@ import { useState } from 'react';
 import api from '../../api/client';
 
 export default function ExcelUpload() {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
+
+  if (!user.is_admin) {
+    return (
+      <div style={{ background: '#f5f5f5', padding: 24, borderRadius: 6, fontSize: 13, color: '#999', textAlign: 'center' }}>
+        Solo l'amministratore può caricare il file Excel.
+      </div>
+    );
+  }
 
   const handleUpload = async () => {
     if (!file) return;
