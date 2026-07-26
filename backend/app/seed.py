@@ -9,21 +9,28 @@ from app.models.formulas import Formula
 from app.models.user import User
 
 
+from app.config import settings as app_settings
+
+
 def seed_database():
     Base.metadata.create_all(bind=engine)
     db: Session = SessionLocal()
 
-    admin = db.query(User).filter(User.username == "admin").first()
-    if not admin:
-        admin = User(
-            email="admin@sgt.local",
-            username="admin",
-            hashed_password=bcrypt.hashpw(b"Cambiata", bcrypt.gensalt()).decode(),
-            is_admin=True,
-        )
-        db.add(admin)
-        db.commit()
-        print("Created admin user (admin / Cambiata)")
+    if app_settings.admin__enable:
+        admin_username = app_settings.admin__username.split("@")[0] if "@" in app_settings.admin__username else app_settings.admin__username
+        admin = db.query(User).filter(User.username == admin_username).first()
+        if not admin:
+            admin = User(
+                email=app_settings.admin__username,
+                username=admin_username,
+                hashed_password=bcrypt.hashpw(app_settings.admin__password.encode(), bcrypt.gensalt()).decode(),
+                is_admin=True,
+            )
+            db.add(admin)
+            db.commit()
+            print(f"Created admin user ({admin_username} / {app_settings.admin__password})")
+        else:
+            print(f"Admin user ({admin_username}) already exists")
 
     if db.query(Formula).count() == 0:
         sample_formulas = [

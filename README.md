@@ -36,16 +36,45 @@ Frontend: http://localhost:80
 Backend API: http://localhost:8500
 Admin login: admin / Cambiata
 
-## .exe standalone (PyInstaller)
+## Standalone (PyInstaller)
+
+### macOS (Apple Silicon / Intel)
 
 ```bash
 cd backend
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 pip install pyinstaller
 pyinstaller pyinstaller.spec
-# L'eseguibile si trova in: dist/Stabilita
+./dist/Stabilita
+```
+
+### Windows (.exe)
+
+Su Windows:
+
+```bash
+cd backend
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+pip install pyinstaller
+pyinstaller pyinstaller.spec
+dist\Stabilita.exe
 ```
 
 L'eseguibile avvia il backend locale su http://localhost:8500 e apre automaticamente il browser.
+
+### Configurazione .env
+
+Crea un file `backend/.env` (non versionato) con le credenziali admin:
+
+```
+ADMIN__ENABLE=true
+ADMIN__USERNAME=admin@local.it
+ADMIN__PASSWORD=CambiaQuestaPassword!
+```
 
 ## Licenza
 

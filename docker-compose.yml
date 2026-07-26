@@ -7,6 +7,8 @@ services:
       - "8500:8500"
     volumes:
       - sgt_data:/app/data
+    env_file:
+      - ./backend/.env
     environment:
       - DATABASE_URL=sqlite:///./data/sgt.db
     command: >

@@ -9,9 +9,13 @@ __pycache__/
 venv/
 *.db
 *.sqlite3
+.env
+build/
 
 # Node
 node_modules/
+dist/
+*.pkg
 dist/
 
 # IDE
