@@ -29,7 +29,9 @@ export default function ExcelUpload() {
       });
       setResult(res.data);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Errore durante il caricamento');
+      const status = err.response?.status;
+      const detail = err.response?.data?.detail || err.response?.data?.message || err.message;
+      setError(`Errore (${status || 'rete'}): ${detail || 'Errore durante il caricamento'}`);
     }
     setLoading(false);
   };
