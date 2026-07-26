@@ -9,7 +9,7 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="SGT - Stabilità delle Gru a Torre",
     description="API per il calcolo di stabilità delle gru a torre KG 26.5",
-    version="0.07",
+    version="0.11",
 )
 
 app.add_middleware(
@@ -34,4 +34,4 @@ app.include_router(calculate.router)
 
 @app.get("/api/health")
 def health():
-    return {"status": "ok", "version": "0.07"}
+    return {"status": "ok", "version": "0.11"}

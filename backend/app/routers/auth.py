@@ -63,7 +63,13 @@ def login_form(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 
 
 @router.post("/register", response_model=UserResponse)
-def register(user_data: UserCreate, db: Session = Depends(get_db)):
+def register(
+    user_data: UserCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Only admins can create users")
     existing = db.query(User).filter(
         (User.username == user_data.username) | (User.email == user_data.email)
     ).first()

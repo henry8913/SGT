@@ -27,6 +27,11 @@ export default function Dashboard() {
     loadProjects();
   };
 
+  const duplicateProject = async (id) => {
+    await projects.duplicate(id);
+    loadProjects();
+  };
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
@@ -74,6 +79,10 @@ export default function Dashboard() {
                 <button onClick={() => navigate(`/progetto/${p.id}/stabilita`)}
                   style={{ padding: '6px 12px', background: '#e8eaf6', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 13 }}>
                   Risultati
+                </button>
+                <button onClick={() => duplicateProject(p.id)}
+                  style={{ padding: '6px 12px', background: '#e8f5e9', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 13, color: '#2e7d32' }}>
+                  Duplica
                 </button>
                 <button onClick={() => deleteProject(p.id)}
                   style={{ padding: '6px 12px', background: '#ffebee', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 13, color: '#c62828' }}>

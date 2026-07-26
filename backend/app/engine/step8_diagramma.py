@@ -25,10 +25,13 @@ class DiagrammaResult:
 def calculate_diagramma(project_id: int, db: Session, load_curves: list, masses: list) -> DiagrammaResult:
     points = []
 
+    total_mass = sum(m.get("massa_kg", 0) for m in masses) if masses else 0
+
     for lc in load_curves:
         raggio = lc.get("raggio", 0)
         carico_max = lc.get("carico_max", 0)
-        carico_effettivo = carico_max * 0.9
+        fattore = max(0.5, 1.0 - (raggio / 65.0) * 0.3)
+        carico_effettivo = carico_max * fattore * (1 - total_mass / 100000.0) if total_mass < 100000 else 0
 
         points.append(DiagramPoint(
             raggio=raggio,

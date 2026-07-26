@@ -16,6 +16,8 @@ class Mass(Base):
     massa_kg: Mapped[float | None] = mapped_column(Float, comment="Q colonna")
     braccio_m: Mapped[float | None] = mapped_column(Float, comment="T colonna")
     posizione: Mapped[str | None] = mapped_column(String(50))
+    coordinata_x: Mapped[float | None] = mapped_column(Float, comment="Xcs")
+    coordinata_y: Mapped[float | None] = mapped_column(Float, comment="Ycs")
     utilizzato: Mapped[bool] = mapped_column(Boolean, default=True, comment='"-" nel file originale')
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 

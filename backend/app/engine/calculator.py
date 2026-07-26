@@ -3,6 +3,7 @@ import json
 from sqlalchemy.orm import Session
 
 from app.engine.dll_replacement import BUILTIN_FUNCTIONS
+from app.engine.formula_evaluator import build_context, eval_formula
 from app.engine.step1_baricentri import calculate_baricentri
 from app.engine.step2_curve_carico import calculate_load_curves
 from app.engine.step3_aree_vento import calculate_wind_areas
@@ -11,6 +12,8 @@ from app.engine.step5_stabilita_q import calculate_stabilita_q
 from app.engine.step6_stabilita_d import calculate_stabilita_d
 from app.engine.step7_carichi_ralla import calculate_carichi_ralla
 from app.engine.step8_diagramma import calculate_diagramma
+from app.models.formulas import Formula
+from app.models.masses import Mass
 from app.models.results import Result
 
 
@@ -129,7 +132,11 @@ class Calculator:
         }
         self._save_result("carichi_ralla", carichi_data)
 
-        diagramma = calculate_diagramma(self.project_id, self.db, load_curves_data, [])
+        masses_data = [
+            {"massa_kg": m.massa_kg, "braccio_m": m.braccio_m, "componente": m.componente}
+            for m in self.db.query(Mass).filter(Mass.project_id == self.project_id).all()
+        ]
+        diagramma = calculate_diagramma(self.project_id, self.db, load_curves_data, masses_data)
         diagramma_data = {
             "points": [
                 {"raggio": p.raggio, "carico_max": p.carico_max, "carico_effettivo": p.carico_effettivo}
