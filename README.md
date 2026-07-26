@@ -1,6 +1,6 @@
 # SGT — Stabilità delle Gru a Torre
 
-Sistema web per la verifica di stabilità della gru a torre KG 26.5,
+Sistema web per la verifica di stabilità delle gru a torre KG 26.5,
 secondo le normative C25/FEM.
 
 ## Stack
