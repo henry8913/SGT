@@ -16,7 +16,7 @@ build/
 node_modules/
 dist/
 *.pkg
-dist/
+*.local
 
 # IDE
 .vscode/
