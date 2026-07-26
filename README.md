@@ -8,23 +8,7 @@ secondo le normative C25/FEM.
 - **Frontend**: React + Vite + JavaScript
 - **Backend**: Python FastAPI
 - **Database**: SQLite (via SQLAlchemy)
-- **Deploy SaaS**: Docker Compose
-- **Deploy .exe**: PyInstaller
-
-## Sviluppo locale
-
-```bash
-# Backend
-cd backend
-pip install -r requirements.txt
-python -m app.seed
-uvicorn app.main:app --reload --port 8500
-
-# Frontend
-cd frontend
-npm install
-npm run dev
-```
+- **Deploy**: Docker Compose (SaaS)
 
 ## Docker (SaaS)
 
@@ -34,39 +18,9 @@ docker compose up --build
 
 Frontend: http://localhost:80
 Backend API: http://localhost:8500
-Admin login: admin / Cambiata
+Admin login: admin / (vedi backend/.env)
 
-## Standalone (PyInstaller)
-
-### macOS (Apple Silicon / Intel)
-
-```bash
-cd backend
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-pip install pyinstaller
-pyinstaller pyinstaller.spec
-./dist/Stabilita
-```
-
-### Windows (.exe)
-
-Su Windows:
-
-```bash
-cd backend
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
-pip install pyinstaller
-pyinstaller pyinstaller.spec
-dist\Stabilita.exe
-```
-
-L'eseguibile avvia il backend locale su http://localhost:8500 e apre automaticamente il browser.
-
-### Configurazione .env
+## Configurazione .env
 
 Crea un file `backend/.env` (non versionato) con le credenziali admin:
 
@@ -74,6 +28,24 @@ Crea un file `backend/.env` (non versionato) con le credenziali admin:
 ADMIN__ENABLE=true
 ADMIN__USERNAME=admin@local.it
 ADMIN__PASSWORD=CambiaQuestaPassword!
+```
+
+## Sviluppo locale
+
+```bash
+# Backend
+cd backend
+python3 -m venv venv
+source venv/bin/activate
+pip3 install -r requirements.txt
+python3 -m app.seed
+python3 -m app.load_formulas
+uvicorn app.main:app --reload --port 8500
+
+# Frontend
+cd frontend
+npm install
+npm run dev
 ```
 
 ## Licenza
