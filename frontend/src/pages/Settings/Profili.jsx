@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import api from '../../api/client';
+import ExcelUpload from './ExcelUpload';
 
 export default function SettingsProfili() {
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   useEffect(() => {
     loadProfiles();
@@ -21,9 +23,17 @@ export default function SettingsProfili() {
 
   return (
     <div>
-      <h2 style={{ marginBottom: 16 }}>Libreria Profili</h2>
-      <p style={{ color: '#666', marginBottom: 24 }}>
-        Catalogo profili strutturali (ex Proprietà_beam).
+      <h2 style={{ marginBottom: 16 }}>Impostazioni</h2>
+
+      {user.is_admin && (
+        <div style={{ marginBottom: 24 }}>
+          <ExcelUpload />
+        </div>
+      )}
+
+      <h3 style={{ marginBottom: 12 }}>Libreria Profili</h3>
+      <p style={{ color: '#666', marginBottom: 24, fontSize: 14 }}>
+        Catalogo profili strutturali (ex Proprietà_beam). Catalogo globale condiviso tra tutti i progetti.
       </p>
       <div style={{ background: '#fff', padding: 24, borderRadius: 6, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
         {loading ? (

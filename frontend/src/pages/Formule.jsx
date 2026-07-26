@@ -57,6 +57,11 @@ export default function Formule() {
   return (
     <div>
       <h2 style={{ marginBottom: 16 }}>Formule</h2>
+      <div style={{ background: '#e3f2fd', padding: 12, borderRadius: 6, marginBottom: 16, fontSize: 13, color: '#1565c0' }}>
+        <strong>🔍 Solo visualizzazione.</strong> Le formule vengono importate automaticamente dal file Excel
+        tramite la sezione <strong>Impostazioni → Carica Excel</strong>.
+        {user.is_admin && ' Se noti un errore, correggi direttamente nel file Excel e ricaricalo. La modifica manuale è sconsigliata.'}
+      </div>
       <p style={{ color: '#666', marginBottom: 16, fontSize: 14 }}>
         {allFormulas.length > 0 ? `${allFormulas.length.toLocaleString()} formule caricate dal file Excel` : 'Caricamento...'}
       </p>
@@ -94,7 +99,8 @@ export default function Formule() {
                 <th style={{ padding: 8, border: '1px solid #ddd', textAlign: 'left', width: 60 }}>Cella</th>
                 <th style={{ padding: 8, border: '1px solid #ddd', textAlign: 'left' }}>Label</th>
                 <th style={{ padding: 8, border: '1px solid #ddd', textAlign: 'left' }}>Formula</th>
-                {user.is_admin && <th style={{ padding: 8, border: '1px solid #ddd', width: 80 }}>Azioni</th>}
+                <th style={{ padding: 8, border: '1px solid #ddd', width: 80, fontSize: 11, color: '#999' }}>Origine</th>
+                {user.is_admin && <th style={{ padding: 8, border: '1px solid #ddd', width: 80 }}>Modifica</th>}
               </tr>
             </thead>
             <tbody>
@@ -102,7 +108,7 @@ export default function Formule() {
                 <tr key={f.id} style={{ background: SHEET_COLORS[f.step] || '#fff' }}>
                   <td style={{ padding: 6, border: '1px solid #ddd', fontWeight: 600 }}>{f.step}</td>
                   <td style={{ padding: 6, border: '1px solid #ddd', fontSize: 11 }}>{f.sheet}</td>
-                  <td style={{ padding: 6, border: '1px solid #ddd', fontFamily: 'monospace' }}>{f.campo}</td>
+                    <td style={{ padding: 6, border: '1px solid #ddd', fontFamily: 'monospace' }}>{f.campo}</td>
                   <td style={{ padding: 6, border: '1px solid #ddd', fontSize: 11 }}>{f.label}</td>
                   <td style={{ padding: 6, border: '1px solid #ddd' }}>
                     {editId === f.id ? (
@@ -125,11 +131,15 @@ export default function Formule() {
                       </code>
                     )}
                   </td>
+                  <td style={{ padding: 6, border: '1px solid #ddd', fontSize: 10, color: '#999' }}>
+                    {f.id ? 'Excel' : 'manuale'}
+                  </td>
                   {user.is_admin && (
                     <td style={{ padding: 6, border: '1px solid #ddd' }}>
                       <button
                         onClick={() => { setEditId(f.id); setEditText(f.formula); }}
                         style={{ padding: '4px 8px', background: '#e8eaf6', border: 'none', borderRadius: 2, cursor: 'pointer', fontSize: 11 }}
+                        title="Modifica formula (solo per correzioni urgenti)"
                       >
                         ✏
                       </button>
