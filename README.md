@@ -26,11 +26,26 @@ npm install
 npm run dev
 ```
 
-## Docker
+## Docker (SaaS)
 
 ```bash
 docker compose up --build
 ```
+
+Frontend: http://localhost:80
+Backend API: http://localhost:8500
+Admin login: admin / Cambiata
+
+## .exe standalone (PyInstaller)
+
+```bash
+cd backend
+pip install pyinstaller
+pyinstaller pyinstaller.spec
+# L'eseguibile si trova in: dist/Stabilita
+```
+
+L'eseguibile avvia il backend locale su http://localhost:8500 e apre automaticamente il browser.
 
 ## Licenza
 
