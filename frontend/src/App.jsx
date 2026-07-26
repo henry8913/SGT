@@ -12,6 +12,7 @@ import Calcola from './pages/Wizard/Calcola';
 import Stabilita from './pages/Progetto/Stabilita';
 import Carichi from './pages/Progetto/Carichi';
 import Diagramma from './pages/Progetto/Diagramma';
+import Formule from './pages/Formule';
 import SettingsProfili from './pages/Settings/Profili';
 import AdminUsers from './pages/Admin/Users';
 
@@ -69,6 +70,10 @@ export default function App() {
         <Route
           path="/progetto/:id/diagramma"
           element={<ProtectedRoute><Layout><Diagramma /></Layout></ProtectedRoute>}
+        />
+        <Route
+          path="/formule"
+          element={<ProtectedRoute><Layout><Formule /></Layout></ProtectedRoute>}
         />
         <Route
           path="/settings/profili"

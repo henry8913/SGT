@@ -22,6 +22,7 @@ export default function Layout({ children }) {
             SGT
           </Link>
           <Link to="/dashboard" style={{ color: '#fff', textDecoration: 'none' }}>Progetti</Link>
+          <Link to="/formule" style={{ color: '#fff', textDecoration: 'none' }}>Formule</Link>
           <Link to="/settings/profili" style={{ color: '#fff', textDecoration: 'none' }}>Impostazioni</Link>
           {user.is_admin && (
             <Link to="/admin/users" style={{ color: '#fff', textDecoration: 'none' }}>Admin</Link>
