@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import Base, engine
-from app.routers import auth, calculate, formulas, geometry, load_curves, machine, masses, projects, stability, wind_areas
+from app.routers import auth, calculate, formulas, geometry, load_curves, machine, masses, profiles, projects, stability, wind_areas
 
 Base.metadata.create_all(bind=engine)
 
@@ -27,6 +27,7 @@ app.include_router(masses.router)
 app.include_router(wind_areas.router)
 app.include_router(stability.router)
 app.include_router(load_curves.router)
+app.include_router(profiles.router)
 app.include_router(formulas.router)
 app.include_router(calculate.router)
 

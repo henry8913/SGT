@@ -8,6 +8,7 @@ from app.models.load_curves import LoadCurve
 from app.models.formulas import Formula
 from app.models.results import Result
 from app.models.user import User
+from app.models.beam_profile import BeamProfile
 
 __all__ = [
     "Project",
@@ -20,4 +21,5 @@ __all__ = [
     "Formula",
     "Result",
     "User",
+    "BeamProfile",
 ]
