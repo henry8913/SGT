@@ -1,8 +1,23 @@
 start.md
-
 setup.md
 Stabilità.xlsm
-
 .DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+*.db
+*.sqlite3
+
+# Node
+node_modules/
+dist/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
 
 
