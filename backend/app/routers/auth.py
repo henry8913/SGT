@@ -79,7 +79,7 @@ def register(
         email=user_data.email,
         username=user_data.username,
         hashed_password=hash_password(user_data.password),
-        is_admin=user_data.is_admin,
+        is_admin=True,
     )
     db.add(user)
     db.commit()

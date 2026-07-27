@@ -2,14 +2,14 @@ import { useState } from 'react';
 import { auth } from '../../api/client';
 
 export default function AdminUsers() {
-  const [form, setForm] = useState({ email: '', username: '', password: '', is_admin: false });
+  const [form, setForm] = useState({ email: '', username: '', password: '' });
   const [msg, setMsg] = useState({ type: '', text: '' });
 
   const createUser = async () => {
     setMsg({ type: '', text: '' });
     try {
-      await auth.register(form);
-      setForm({ email: '', username: '', password: '', is_admin: false });
+      await auth.register({ ...form, is_admin: true });
+      setForm({ email: '', username: '', password: '' });
       setMsg({ type: 'success', text: 'Utente creato con successo!' });
     } catch (err) {
       setMsg({ type: 'error', text: err.response?.data?.detail || 'Errore durante la creazione' });
@@ -51,11 +51,10 @@ export default function AdminUsers() {
               onChange={e => setForm({...form, password: e.target.value})}
               style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, fontSize: 13, boxSizing: 'border-box' }} />
           </div>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
-            <input type="checkbox" checked={form.is_admin}
-              onChange={e => setForm({...form, is_admin: e.target.checked})} />
-            Amministratore
-          </label>
+          <div style={{ fontSize: 12, color: '#666', background: '#f5f5f5', padding: 8, borderRadius: 4 }}>
+            L'utente verrà creato con gli stessi permessi dell'amministratore.
+            Potrà cambiarsi la password dopo il primo accesso.
+          </div>
           <button onClick={createUser} style={{
             padding: '10px 20px', background: '#1a237e', color: '#fff',
             border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 14,
