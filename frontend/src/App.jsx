@@ -3,6 +3,11 @@ import Layout from './components/Layout';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import ComeFunziona from './pages/ComeFunziona';
+import Piani from './pages/Piani';
+import ChiSiamo from './pages/ChiSiamo';
+import Blog from './pages/Blog';
+import Contatto from './pages/Contatto';
 import Step1 from './pages/Wizard/Step1';
 import Step2 from './pages/Wizard/Step2';
 import Step3 from './pages/Wizard/Step3';
@@ -38,66 +43,26 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
-        <Route
-          path="/dashboard"
-          element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>}
-        />
-        <Route
-          path="/nuovo-progetto/step-1"
-          element={<ProtectedRoute><Layout><Step1 /></Layout></ProtectedRoute>}
-        />
-        <Route
-          path="/nuovo-progetto/step-2"
-          element={<ProtectedRoute><Layout><Step2 /></Layout></ProtectedRoute>}
-        />
-        <Route
-          path="/nuovo-progetto/step-3"
-          element={<ProtectedRoute><Layout><Step3 /></Layout></ProtectedRoute>}
-        />
-        <Route
-          path="/nuovo-progetto/step-4"
-          element={<ProtectedRoute><Layout><Step4 /></Layout></ProtectedRoute>}
-        />
-        <Route
-          path="/nuovo-progetto/step-5"
-          element={<ProtectedRoute><Layout><Step5 /></Layout></ProtectedRoute>}
-        />
-        <Route
-          path="/nuovo-progetto/step-6"
-          element={<ProtectedRoute><Layout><Step6 /></Layout></ProtectedRoute>}
-        />
-        <Route
-          path="/nuovo-progetto/calcola"
-          element={<ProtectedRoute><Layout><Calcola /></Layout></ProtectedRoute>}
-        />
-        <Route
-          path="/progetto/:id/stabilita"
-          element={<ProtectedRoute><Layout><Stabilita /></Layout></ProtectedRoute>}
-        />
-        <Route
-          path="/progetto/:id/carichi"
-          element={<ProtectedRoute><Layout><Carichi /></Layout></ProtectedRoute>}
-        />
-        <Route
-          path="/progetto/:id/diagramma"
-          element={<ProtectedRoute><Layout><Diagramma /></Layout></ProtectedRoute>}
-        />
-        <Route
-          path="/formule"
-          element={<ProtectedRoute><Layout><Formule /></Layout></ProtectedRoute>}
-        />
-        <Route
-          path="/settings/profili"
-          element={<ProtectedRoute><Layout><SettingsProfili /></Layout></ProtectedRoute>}
-        />
-        <Route
-          path="/settings/password"
-          element={<ProtectedRoute><Layout><Password /></Layout></ProtectedRoute>}
-        />
-        <Route
-          path="/admin/users"
-          element={<AdminRoute><Layout><AdminUsers /></Layout></AdminRoute>}
-        />
+        <Route path="/come-funziona" element={<ComeFunziona />} />
+        <Route path="/piani" element={<Piani />} />
+        <Route path="/chi-siamo" element={<ChiSiamo />} />
+        <Route path="/blog" element={<Blog />} />
+        <Route path="/contatto" element={<Contatto />} />
+        <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
+        <Route path="/nuovo-progetto/step-1" element={<ProtectedRoute><Layout><Step1 /></Layout></ProtectedRoute>} />
+        <Route path="/nuovo-progetto/step-2" element={<ProtectedRoute><Layout><Step2 /></Layout></ProtectedRoute>} />
+        <Route path="/nuovo-progetto/step-3" element={<ProtectedRoute><Layout><Step3 /></Layout></ProtectedRoute>} />
+        <Route path="/nuovo-progetto/step-4" element={<ProtectedRoute><Layout><Step4 /></Layout></ProtectedRoute>} />
+        <Route path="/nuovo-progetto/step-5" element={<ProtectedRoute><Layout><Step5 /></Layout></ProtectedRoute>} />
+        <Route path="/nuovo-progetto/step-6" element={<ProtectedRoute><Layout><Step6 /></Layout></ProtectedRoute>} />
+        <Route path="/nuovo-progetto/calcola" element={<ProtectedRoute><Layout><Calcola /></Layout></ProtectedRoute>} />
+        <Route path="/progetto/:id/stabilita" element={<ProtectedRoute><Layout><Stabilita /></Layout></ProtectedRoute>} />
+        <Route path="/progetto/:id/carichi" element={<ProtectedRoute><Layout><Carichi /></Layout></ProtectedRoute>} />
+        <Route path="/progetto/:id/diagramma" element={<ProtectedRoute><Layout><Diagramma /></Layout></ProtectedRoute>} />
+        <Route path="/formule" element={<ProtectedRoute><Layout><Formule /></Layout></ProtectedRoute>} />
+        <Route path="/settings/profili" element={<ProtectedRoute><Layout><SettingsProfili /></Layout></ProtectedRoute>} />
+        <Route path="/settings/password" element={<ProtectedRoute><Layout><Password /></Layout></ProtectedRoute>} />
+        <Route path="/admin/users" element={<AdminRoute><Layout><AdminUsers /></Layout></AdminRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
