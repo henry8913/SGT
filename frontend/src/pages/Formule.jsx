@@ -56,74 +56,59 @@ export default function Formule() {
 
   return (
     <div>
-      <h2 style={{ marginBottom: 16 }}>Formule</h2>
-      <div style={{ background: '#e3f2fd', padding: 12, borderRadius: 6, marginBottom: 16, fontSize: 13, color: '#1565c0' }}>
+      <div className="page-header page-header-accent">
+        <h1>Formule</h1>
+        <p>{allFormulas.length > 0 ? `${allFormulas.length.toLocaleString()} formule caricate dal file Excel` : 'Caricamento...'}</p>
+      </div>
+
+      <div className="msg msg-info" style={{ marginBottom: 20 }}>
         <strong>🔍 Solo visualizzazione.</strong> Le formule vengono importate automaticamente dal file Excel
         tramite la sezione <strong>Impostazioni → Carica Excel</strong>.
-        {user.is_admin && ' Se noti un errore, correggi direttamente nel file Excel e ricaricalo. La modifica manuale è sconsigliata.'}
+        {user.is_admin && ' Se noti un errore, correggi direttamente nel file Excel e ricaricalo.'}
       </div>
-      <p style={{ color: '#666', marginBottom: 16, fontSize: 14 }}>
-        {allFormulas.length > 0 ? `${allFormulas.length.toLocaleString()} formule caricate dal file Excel` : 'Caricamento...'}
-      </p>
 
-      <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
-        <select
-          value={stepFilter}
-          onChange={e => setStepFilter(e.target.value)}
-          style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: 4, fontSize: 13 }}
-        >
+      <div className="flex gap-3 flex-wrap" style={{ marginBottom: 20 }}>
+        <select value={stepFilter} onChange={e => setStepFilter(e.target.value)} style={{ width: 'auto', minWidth: 200, background: '#fff' }}>
           <option value="">Tutti gli step</option>
           {steps.map(s => (
             <option key={s} value={s}>{s} ({allFormulas.filter(f => f.step === s).length.toLocaleString()})</option>
           ))}
         </select>
-        <input
-          type="text"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Cerca formula, cella, label..."
-          style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: 4, fontSize: 13, flex: 1, minWidth: 200 }}
-        />
-        <span style={{ padding: '8px 0', fontSize: 13, color: '#666' }}>
+        <input type="text" value={search} onChange={e => setSearch(e.target.value)}
+          placeholder="Cerca formula, cella, label..." style={{ flex: 1, minWidth: 200, background: '#fff' }} />
+        <span style={{ padding: '8px 0', fontSize: 13, color: 'var(--gray)' }}>
           {filtered.length.toLocaleString()} risultati
         </span>
       </div>
 
-      <div style={{ background: '#fff', borderRadius: 6, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
-        <div style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-            <thead style={{ position: 'sticky', top: 0, background: '#f5f5f5', zIndex: 1 }}>
+      <div className="card" style={{ overflow: 'hidden' }}>
+        <div className="table-wrap" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+          <table style={{ fontSize: 12 }}>
+            <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
               <tr>
-                <th style={{ padding: 8, border: '1px solid #ddd', textAlign: 'left', width: 80 }}>Step</th>
-                <th style={{ padding: 8, border: '1px solid #ddd', textAlign: 'left', width: 100 }}>Foglio</th>
-                <th style={{ padding: 8, border: '1px solid #ddd', textAlign: 'left', width: 60 }}>Cella</th>
-                <th style={{ padding: 8, border: '1px solid #ddd', textAlign: 'left' }}>Label</th>
-                <th style={{ padding: 8, border: '1px solid #ddd', textAlign: 'left' }}>Formula</th>
-                <th style={{ padding: 8, border: '1px solid #ddd', width: 80, fontSize: 11, color: '#999' }}>Origine</th>
-                {user.is_admin && <th style={{ padding: 8, border: '1px solid #ddd', width: 80 }}>Modifica</th>}
+                <th>Step</th>
+                <th>Foglio</th>
+                <th>Cella</th>
+                <th>Label</th>
+                <th>Formula</th>
+                <th>Origine</th>
+                {user.is_admin && <th>Azioni</th>}
               </tr>
             </thead>
             <tbody>
               {filtered.map(f => (
-                <tr key={f.id} style={{ background: SHEET_COLORS[f.step] || '#fff' }}>
-                  <td style={{ padding: 6, border: '1px solid #ddd', fontWeight: 600 }}>{f.step}</td>
-                  <td style={{ padding: 6, border: '1px solid #ddd', fontSize: 11 }}>{f.sheet}</td>
-                    <td style={{ padding: 6, border: '1px solid #ddd', fontFamily: 'monospace' }}>{f.campo}</td>
-                  <td style={{ padding: 6, border: '1px solid #ddd', fontSize: 11 }}>{f.label}</td>
-                  <td style={{ padding: 6, border: '1px solid #ddd' }}>
+                <tr key={f.id} style={{ background: (SHEET_COLORS[f.step] || '') + '30' }}>
+                  <td style={{ fontWeight: 600 }}>{f.step}</td>
+                  <td style={{ fontSize: 11 }}>{f.sheet}</td>
+                  <td style={{ fontFamily: 'monospace', fontSize: 11 }}>{f.campo}</td>
+                  <td style={{ fontSize: 11 }}>{f.label}</td>
+                  <td>
                     {editId === f.id ? (
-                      <div style={{ display: 'flex', gap: 4 }}>
-                        <input
-                          value={editText}
-                          onChange={e => setEditText(e.target.value)}
-                          style={{ flex: 1, padding: 4, border: '1px solid #1a237e', borderRadius: 2, fontSize: 11, fontFamily: 'monospace' }}
-                        />
-                        <button onClick={() => saveFormula(f.id)} style={{ padding: '4px 8px', background: '#1a237e', color: '#fff', border: 'none', borderRadius: 2, cursor: 'pointer', fontSize: 11 }}>
-                          Salva
-                        </button>
-                        <button onClick={() => setEditId(null)} style={{ padding: '4px 8px', background: '#e0e0e0', border: 'none', borderRadius: 2, cursor: 'pointer', fontSize: 11 }}>
-                          X
-                        </button>
+                      <div className="flex gap-2">
+                        <input value={editText} onChange={e => setEditText(e.target.value)}
+                          style={{ flex: 1, padding: 4, border: '1.5px solid var(--yellow)', borderRadius: 3, fontSize: 11, fontFamily: 'monospace' }} />
+                        <button onClick={() => saveFormula(f.id)} className="btn btn-xs btn-primary">Salva</button>
+                        <button onClick={() => setEditId(null)} className="btn btn-xs btn-ghost">X</button>
                       </div>
                     ) : (
                       <code style={{ fontSize: 11, fontFamily: 'monospace', wordBreak: 'break-all' }}>
@@ -131,16 +116,11 @@ export default function Formule() {
                       </code>
                     )}
                   </td>
-                  <td style={{ padding: 6, border: '1px solid #ddd', fontSize: 10, color: '#999' }}>
-                    {f.id ? 'Excel' : 'manuale'}
-                  </td>
+                  <td style={{ fontSize: 10, color: 'var(--gray)' }}>{f.id ? 'Excel' : 'manuale'}</td>
                   {user.is_admin && (
-                    <td style={{ padding: 6, border: '1px solid #ddd' }}>
-                      <button
-                        onClick={() => { setEditId(f.id); setEditText(f.formula); }}
-                        style={{ padding: '4px 8px', background: '#e8eaf6', border: 'none', borderRadius: 2, cursor: 'pointer', fontSize: 11 }}
-                        title="Modifica formula (solo per correzioni urgenti)"
-                      >
+                    <td>
+                      <button onClick={() => { setEditId(f.id); setEditText(f.formula); }}
+                        className="btn btn-xs btn-ghost" title="Modifica formula">
                         ✏
                       </button>
                     </td>

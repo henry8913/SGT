@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
 const steps = [
   { num: 1, label: 'Macchina', path: '/nuovo-progetto/step-1' },
@@ -14,37 +14,22 @@ export default function WizardNav({ projectId }) {
   const currentStep = steps.find(s => location.pathname.includes(s.path))?.num || 1;
 
   return (
-    <div style={{ marginBottom: 24, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-      <div style={{ display: 'flex', gap: 0, minWidth: 640 }}>
-        {steps.map((s, i) => {
-          const isDone = currentStep > s.num;
-          const isCurrent = currentStep === s.num;
+    <div style={{ marginBottom: 24 }}>
+      <div className="step-bar" style={{ minWidth: 600 }}>
+        {steps.map((s) => {
+          let cls = 'step-pending';
+          if (currentStep > s.num) cls = 'step-done';
+          if (currentStep === s.num) cls = 'step-current';
           return (
-            <a
-              key={s.num}
-              href={`${s.path}?projectId=${projectId}`}
-              style={{
-                flex: 1,
-                padding: '10px 14px',
-                textDecoration: 'none',
-                fontSize: 12,
-                fontWeight: isCurrent ? 600 : 400,
-                textAlign: 'center',
-                color: isDone || isCurrent ? '#fff' : 'var(--steel)',
-                background: isCurrent ? 'var(--primary-light)' : isDone ? 'var(--primary)' : '#e2e8f0',
-                borderRight: '1px solid rgba(255,255,255,0.15)',
-                transition: 'all 0.2s',
-                whiteSpace: 'nowrap',
-                position: 'relative',
-              }}
-            >
+            <a key={s.num} href={`${s.path}?projectId=${projectId}`} className={`step-item ${cls}`}>
               {s.num}. {s.label}
             </a>
           );
         })}
       </div>
-      <div style={{ marginTop: 8, fontSize: 12, color: 'var(--steel-light)' }}>
+      <div style={{ fontSize: 12, color: 'var(--gray)' }}>
         Step {currentStep} di 6
+        {currentStep > 1 && <span style={{ marginLeft: 8, color: 'var(--yellow)' }}>✔ Completati: {currentStep - 1}</span>}
       </div>
     </div>
   );

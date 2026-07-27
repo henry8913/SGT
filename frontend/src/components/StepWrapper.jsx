@@ -7,8 +7,10 @@ export default function StepWrapper({ title, description, children }) {
 
   return (
     <div>
-      <h2 style={{ marginBottom: 4 }}>{title}</h2>
-      {description && <p style={{ color: '#666', marginBottom: 16, fontSize: 14 }}>{description}</p>}
+      <div className="page-header page-header-accent">
+        <h1>{title}</h1>
+        {description && <p>{description}</p>}
+      </div>
       {projectId && <WizardNav projectId={projectId} />}
       {children}
     </div>
