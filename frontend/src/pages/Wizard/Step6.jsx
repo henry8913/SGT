@@ -76,7 +76,7 @@ export default function Step6() {
           <button onClick={() => navigate(`/nuovo-progetto/step-5?projectId=${projectId}`)} style={{ padding: '10px 20px', background: '#e0e0e0', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
             Indietro
           </button>
-          <button onClick={saveAll} style={{ padding: '10px 20px', background: '#1a237e', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
+          <button onClick={saveAll} style={{ padding: '10px 20px', background: #1e1e2e, color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
             Salva e calcola
           </button>
         </div>

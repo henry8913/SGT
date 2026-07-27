@@ -53,7 +53,7 @@ export default function Diagramma() {
                       <YAxis label={{ value: 'Carico (kg)', angle: -90, position: 'insideLeft' }} tick={{ fontSize: 12 }} />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="carico_max" fill="var(--primary-light)" name="Carico max" radius={[4,4,0,0]} />
+                      <Bar dataKey="carico_max" fill="#D4A017" name="Carico max" radius={[4,4,0,0]} />
                       <Bar dataKey="carico_effettivo" fill="var(--accent)" name="Carico effettivo" radius={[4,4,0,0]} />
                     </BarChart>
                   </ResponsiveContainer>

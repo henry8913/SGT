@@ -61,7 +61,7 @@ export default function Password() {
             style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4, fontSize: 13, boxSizing: 'border-box' }} />
         </div>
         <button onClick={handleChange} style={{
-          padding: '10px 20px', background: '#1a237e', color: '#fff',
+          padding: '10px 20px', background: #1e1e2e, color: '#fff',
           border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 14,
         }}>
           Cambia password
