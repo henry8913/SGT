@@ -24,56 +24,68 @@ export default function Diagramma() {
 
   return (
     <div>
-      <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
-        <button onClick={() => navigate(`/progetto/${id}/stabilita`)} style={{ padding: '8px 16px', background: '#e8eaf6', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 13 }}>
-          Dashboard Stabilità
-        </button>
-        <button onClick={() => navigate(`/progetto/${id}/carichi`)} style={{ padding: '8px 16px', background: '#e8eaf6', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 13 }}>
-          Carichi Ralla
-        </button>
+      <div className="page-header flex justify-between items-center flex-wrap gap-3">
+        <div>
+          <h1>Diagramma di Carico</h1>
+          <p>Grafico e tabella carico / raggio</p>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={() => navigate(`/progetto/${id}/stabilita`)} className="btn btn-ghost btn-sm">Stabilità</button>
+          <button onClick={() => navigate(`/progetto/${id}/carichi`)} className="btn btn-ghost btn-sm">Carichi</button>
+        </div>
       </div>
 
-      <h2 style={{ marginBottom: 16 }}>Diagramma di Carico</h2>
-
       {!diagramma ? (
-        <p style={{ color: '#999' }}>Nessun risultato disponibile.</p>
+        <div className="card" style={{ textAlign: 'center', padding: 48, color: 'var(--text-secondary)' }}>
+          Nessun risultato disponibile.
+        </div>
       ) : (
         <>
-          <div style={{ background: '#fff', padding: 24, borderRadius: 6, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: 24 }}>
-            <h3 style={{ marginBottom: 16 }}>Grafico carico / raggio</h3>
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart data={diagramma.points || []} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="raggio" label={{ value: 'Raggio (m)', position: 'insideBottom', offset: -5 }} />
-                <YAxis label={{ value: 'Carico (kg)', angle: -90, position: 'insideLeft' }} />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="carico_max" fill="#1a237e" name="Carico max" />
-                <Bar dataKey="carico_effettivo" fill="#4caf50" name="Carico effettivo" />
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="card" style={{ marginBottom: 24 }}>
+            <div className="card-header">Grafico carico / raggio</div>
+            <div className="card-body">
+              <div style={{ width: '100%', height: 400, overflowX: 'auto' }}>
+                <div style={{ minWidth: 500, height: 400 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={diagramma.points || []} margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis dataKey="raggio" label={{ value: 'Raggio (m)', position: 'insideBottom', offset: -10 }} tick={{ fontSize: 12 }} />
+                      <YAxis label={{ value: 'Carico (kg)', angle: -90, position: 'insideLeft' }} tick={{ fontSize: 12 }} />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="carico_max" fill="var(--primary-light)" name="Carico max" radius={[4,4,0,0]} />
+                      <Bar dataKey="carico_effettivo" fill="var(--accent)" name="Carico effettivo" radius={[4,4,0,0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div style={{ overflowX: 'auto', background: '#fff', padding: 24, borderRadius: 6, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-            <h3 style={{ marginBottom: 16 }}>Tabella carico / raggio</h3>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-              <thead>
-                <tr style={{ background: '#f5f5f5' }}>
-                  <th style={{ padding: 8, border: '1px solid #ddd', textAlign: 'left' }}>Raggio (m)</th>
-                  <th style={{ padding: 8, border: '1px solid #ddd' }}>Carico max (kg)</th>
-                  <th style={{ padding: 8, border: '1px solid #ddd' }}>Carico effettivo (kg)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {diagramma.points?.map((p, i) => (
-                  <tr key={i}>
-                    <td style={{ padding: 8, border: '1px solid #ddd', fontWeight: 600 }}>{p.raggio}</td>
-                    <td style={{ padding: 8, border: '1px solid #ddd' }}>{p.carico_max?.toLocaleString()}</td>
-                    <td style={{ padding: 8, border: '1px solid #ddd' }}>{p.carico_effettivo?.toLocaleString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="card">
+            <div className="card-header">Tabella carico / raggio</div>
+            <div className="card-body">
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Raggio (m)</th>
+                      <th>Carico max (kg)</th>
+                      <th>Carico effettivo (kg)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {diagramma.points?.map((p, i) => (
+                      <tr key={i}>
+                        <td style={{ fontWeight: 600 }}>{p.raggio}</td>
+                        <td>{p.carico_max?.toLocaleString()}</td>
+                        <td>{p.carico_effettivo?.toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </>
       )}

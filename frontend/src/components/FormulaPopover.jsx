@@ -14,18 +14,13 @@ export default function FormulaPopover({ step, campo, label, currentValue }) {
       const found = res.data.find(f => f.campo === campo);
       setFormula(found);
       if (found) setEditText(found.formula);
-    } catch (err) {
-      setFormula(null);
-    }
+    } catch (err) { setFormula(null); }
     setOpen(true);
   };
 
   const saveFormula = async () => {
     if (!formula) {
-      await formulas.create({
-        step, campo, label: label || campo,
-        formula: editText, sheet: step,
-      });
+      await formulas.create({ step, campo, label: label || campo, formula: editText, sheet: step });
     } else {
       await formulas.update(formula.id, { formula: editText });
     }
@@ -35,110 +30,74 @@ export default function FormulaPopover({ step, campo, label, currentValue }) {
 
   return (
     <>
-      <button
-        onClick={loadFormula}
-        title="Mostra formula"
-        style={{
-          background: '#e8eaf6', border: 'none', borderRadius: 4,
-          padding: '2px 6px', cursor: 'pointer', fontSize: 11,
-          color: '#1a237e', marginLeft: 4,
-        }}
-      >
+      <button onClick={loadFormula} title="Mostra formula" className="btn btn-xs btn-ghost" style={{ marginLeft: 4 }}>
         fx
       </button>
 
       {open && (
         <div
           style={{
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            background: 'rgba(0,0,0,0.3)', zIndex: 1000,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)',
+            zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: 20,
           }}
           onClick={() => { setOpen(false); setEditMode(false); }}
         >
           <div
-            style={{
-              background: '#fff', padding: 24, borderRadius: 8,
-              minWidth: 400, maxWidth: 600, boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
-            }}
+            className="card"
+            style={{ width: '100%', maxWidth: 520 }}
             onClick={e => e.stopPropagation()}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+            <div className="card-header flex justify-between items-center">
               <div>
-                <strong style={{ fontSize: 16 }}>{label || campo}</strong>
-                <div style={{ fontSize: 12, color: '#999', marginTop: 2 }}>
-                  {step} — {campo}
-                </div>
+                <strong>{label || campo}</strong>
+                <span style={{ fontSize: 11, color: 'var(--steel-light)', marginLeft: 8 }}>{step} — {campo}</span>
               </div>
-              <button
-                onClick={() => { setOpen(false); setEditMode(false); }}
-                style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#999' }}
-              >
-                ×
-              </button>
+              <button onClick={() => { setOpen(false); setEditMode(false); }} className="btn btn-xs btn-ghost" style={{ fontSize: 16, lineHeight: 1 }}>×</button>
             </div>
-
-            {formula ? (
-              <div>
-                <div style={{ marginBottom: 12 }}>
-                  <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Formula:</div>
-                  {editMode ? (
-                    <textarea
-                      value={editText}
-                      onChange={e => setEditText(e.target.value)}
-                      style={{
-                        width: '100%', padding: 8, border: '1px solid #1a237e',
-                        borderRadius: 4, fontSize: 13, fontFamily: 'monospace',
-                        minHeight: 60, boxSizing: 'border-box',
-                      }}
-                    />
-                  ) : (
-                    <code style={{
-                      display: 'block', padding: 8, background: '#f5f5f5',
-                      borderRadius: 4, fontSize: 13, fontFamily: 'monospace',
-                    }}>
-                      = {formula.formula}
-                    </code>
-                  )}
+            <div className="card-body">
+              {formula ? (
+                <div>
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Formula:</div>
+                    {editMode ? (
+                      <textarea
+                        value={editText}
+                        onChange={e => setEditText(e.target.value)}
+                        style={{ width: '100%', padding: 8, border: '1px solid var(--primary-light)', borderRadius: 4, fontSize: 13, fontFamily: 'monospace', minHeight: 60, boxSizing: 'border-box' }}
+                      />
+                    ) : (
+                      <code style={{ display: 'block', padding: 10, background: 'var(--bg)', borderRadius: 4, fontSize: 13, fontFamily: 'monospace', wordBreak: 'break-all' }}>
+                        = {formula.formula}
+                      </code>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 8 }}>
+                    Dipende da: {formula.dipende_da ? JSON.parse(formula.dipende_da).join(', ') : 'nessuna dipendenza'}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                    Valore corrente: <strong style={{ color: 'var(--text)' }}>{currentValue ?? '—'}</strong>
+                  </div>
                 </div>
-                <div style={{ fontSize: 12, color: '#666', marginBottom: 12 }}>
-                  Dipende da: {formula.dipende_da ? JSON.parse(formula.dipende_da).join(', ') : 'nessuna dipendenza'}
+              ) : (
+                <div style={{ color: 'var(--text-secondary)', fontSize: 13, marginBottom: 12 }}>
+                  Nessuna formula salvata per questo campo.
+                  {user.is_admin && <span> Puoi aggiungerne una.</span>}
                 </div>
-                <div style={{ fontSize: 12, color: '#666' }}>
-                  Valore corrente: <strong>{currentValue ?? '—'}</strong>
-                </div>
-              </div>
-            ) : (
-              <div style={{ color: '#999', fontSize: 13, marginBottom: 12 }}>
-                Nessuna formula salvata per questo campo.
-              </div>
-            )}
+              )}
 
-            {!formula && !editMode && (
-              <button onClick={() => setEditMode(true)} style={{
-                padding: '6px 12px', background: '#e8eaf6', border: 'none',
-                borderRadius: 4, cursor: 'pointer', fontSize: 13,
-              }}>
-                + Aggiungi formula
-              </button>
-            )}
-
-            {editMode && user.is_admin && (
-              <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                <button onClick={saveFormula} style={{
-                  padding: '8px 16px', background: '#1a237e', color: '#fff',
-                  border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 13,
-                }}>
-                  Salva
-                </button>
-                <button onClick={() => setEditMode(false)} style={{
-                  padding: '8px 16px', background: '#e0e0e0', border: 'none',
-                  borderRadius: 4, cursor: 'pointer', fontSize: 13,
-                }}>
-                  Annulla
-                </button>
+              <div className="flex gap-2" style={{ marginTop: 16 }}>
+                {!formula && !editMode && user.is_admin && (
+                  <button onClick={() => setEditMode(true)} className="btn btn-ghost btn-sm">+ Aggiungi formula</button>
+                )}
+                {editMode && user.is_admin && (
+                  <>
+                    <button onClick={saveFormula} className="btn btn-primary btn-sm">Salva</button>
+                    <button onClick={() => setEditMode(false)} className="btn btn-ghost btn-sm">Annulla</button>
+                  </>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
       )}

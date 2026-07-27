@@ -10,8 +10,10 @@ export default function Dashboard() {
   useEffect(() => { loadProjects(); }, []);
 
   const loadProjects = async () => {
-    const res = await projects.list();
-    setList(res.data);
+    try {
+      const res = await projects.list();
+      setList(res.data);
+    } catch (err) { console.error(err); }
   };
 
   const createProject = async () => {
@@ -34,60 +36,68 @@ export default function Dashboard() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <h2 style={{ margin: 0 }}>I tuoi progetti</h2>
-        <div style={{ display: 'flex', gap: 8 }}>
+      <div className="page-header flex justify-between items-center flex-wrap gap-3">
+        <div>
+          <h1>I tuoi progetti</h1>
+          <p>Gestisci le verifiche di stabilità</p>
+        </div>
+        <div className="flex gap-3" style={{ flexWrap: 'wrap' }}>
           <input
-            type="text" value={newName}
+            type="text"
+            value={newName}
             onChange={(e) => setNewName(e.target.value)}
             placeholder="Nome nuovo progetto..."
-            style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, width: 250 }}
+            style={{ width: 240, background: '#fff' }}
             onKeyDown={(e) => e.key === 'Enter' && createProject()}
           />
-          <button onClick={createProject} style={{
-            padding: '8px 16px', background: '#1a237e', color: '#fff',
-            border: 'none', borderRadius: 4, cursor: 'pointer',
-          }}>
-            + Nuovo
+          <button onClick={createProject} className="btn btn-primary">
+            + Nuovo progetto
           </button>
         </div>
       </div>
 
       {list.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 48, color: '#999' }}>
-          Nessun progetto. Creane uno nuovo per iniziare.
+        <div className="card" style={{ textAlign: 'center', padding: 64 }}>
+          <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.3 }}>🏗️</div>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 15 }}>Nessun progetto ancora.</p>
+          <p style={{ color: 'var(--steel-light)', fontSize: 13, marginTop: 4 }}>Creane uno nuovo per iniziare una verifica di stabilità.</p>
         </div>
       ) : (
         <div style={{ display: 'grid', gap: 12 }}>
           {list.map((p) => (
-            <div key={p.id} style={{
-              background: '#fff', padding: '16px 20px', borderRadius: 6,
-              boxShadow: '0 1px 3px rgba(0,0,0,0.08)', display: 'flex',
-              justifyContent: 'space-between', alignItems: 'center',
-            }}>
-              <div>
-                <div style={{ fontWeight: 600, marginBottom: 4 }}>{p.name}</div>
-                <div style={{ fontSize: 12, color: '#999' }}>
-                  Creato: {new Date(p.created_at).toLocaleDateString('it-IT')}
+            <div key={p.id} className="card">
+              <div className="card-body" style={{
+                padding: '16px 20px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: 12,
+              }}>
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 2 }}>{p.name}</div>
+                  <div style={{ fontSize: 12, color: 'var(--steel-light)' }}>
+                    Creato il {new Date(p.created_at).toLocaleDateString('it-IT')}
+                  </div>
                 </div>
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={() => navigate(`/nuovo-progetto/step-1?projectId=${p.id}`)}
-                  style={{ padding: '6px 12px', background: '#e8eaf6', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 13 }}>
-                  Wizard
-                </button>
-                <button onClick={() => navigate(`/progetto/${p.id}/stabilita`)}
-                  style={{ padding: '6px 12px', background: '#e8eaf6', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 13 }}>
-                  Risultati
-                </button>
-                <button onClick={() => duplicateProject(p.id)}
-                  style={{ padding: '6px 12px', background: '#e8f5e9', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 13, color: '#2e7d32' }}>
-                  Duplica
-                </button>
-                <button onClick={() => deleteProject(p.id)}
-                  style={{ padding: '6px 12px', background: '#ffebee', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 13, color: '#c62828' }}>
-                  Elimina
-                </button>
+                <div className="flex gap-2" style={{ flexWrap: 'wrap' }}>
+                  <button onClick={() => navigate(`/nuovo-progetto/step-1?projectId=${p.id}`)}
+                    className="btn btn-ghost btn-sm">
+                    Wizard
+                  </button>
+                  <button onClick={() => navigate(`/progetto/${p.id}/stabilita`)}
+                    className="btn btn-ghost btn-sm">
+                    Risultati
+                  </button>
+                  <button onClick={() => duplicateProject(p.id)}
+                    className="btn btn-ghost btn-sm">
+                    Duplica
+                  </button>
+                  <button onClick={() => deleteProject(p.id)}
+                    className="btn btn-sm btn-danger">
+                    Elimina
+                  </button>
+                </div>
               </div>
             </div>
           ))}

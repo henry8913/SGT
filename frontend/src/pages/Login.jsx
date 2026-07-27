@@ -18,50 +18,82 @@ export default function Login() {
       localStorage.setItem('user', JSON.stringify({ username: form.username, is_admin: isAdmin }));
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Errore di login');
+      setError(err.response?.data?.detail || 'Credenziali non valide');
     }
   };
 
   return (
     <div style={{
-      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'linear-gradient(135deg, #1a237e 0%, #0d47a1 100%)',
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 50%, #0d47a1 100%)',
+      padding: 20,
     }}>
       <div style={{
-        background: '#fff', padding: 40, borderRadius: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.15)',
-        width: 360,
+        background: '#fff',
+        padding: 48,
+        borderRadius: 12,
+        boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+        width: '100%',
+        maxWidth: 400,
       }}>
-        <h1 style={{ textAlign: 'center', marginBottom: 8, color: '#1a237e' }}>SGT</h1>
-        <p style={{ textAlign: 'center', color: '#666', marginBottom: 24, fontSize: 14 }}>
-          Stabilità delle Gru a Torre
-        </p>
-        {error && <div style={{ background: '#ffebee', color: '#c62828', padding: 8, borderRadius: 4, marginBottom: 16, fontSize: 13 }}>{error}</div>}
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <div style={{
+            width: 56, height: 56, borderRadius: 12,
+            background: 'var(--primary)', display: 'inline-flex',
+            alignItems: 'center', justifyContent: 'center',
+            marginBottom: 16, color: '#fff', fontSize: 24, fontWeight: 700,
+          }}>
+            S
+          </div>
+          <h1 style={{ fontSize: 24, color: 'var(--primary)', marginBottom: 4 }}>SGT</h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>
+            Stabilità delle Gru a Torre
+          </p>
+        </div>
+
+        {error && <div className="msg msg-error">{error}</div>}
+
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ display: 'block', marginBottom: 4, fontSize: 13, color: '#333' }}>Username</label>
+          <div style={{ marginBottom: 20 }}>
+            <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>
+              Username
+            </label>
             <input
-              type="text" value={form.username}
+              type="text"
+              value={form.username}
               onChange={(e) => setForm({ ...form, username: e.target.value })}
-              style={{ width: '100%', padding: '8px 12px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, boxSizing: 'border-box' }}
+              placeholder="Il tuo username"
               required
+              style={{ background: '#fff' }}
             />
           </div>
-          <div style={{ marginBottom: 24 }}>
-            <label style={{ display: 'block', marginBottom: 4, fontSize: 13, color: '#333' }}>Password</label>
+          <div style={{ marginBottom: 28 }}>
+            <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>
+              Password
+            </label>
             <input
-              type="password" value={form.password}
+              type="password"
+              value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
-              style={{ width: '100%', padding: '8px 12px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, boxSizing: 'border-box' }}
+              placeholder="••••••••"
               required
+              style={{ background: '#fff' }}
             />
           </div>
-          <button type="submit" style={{
-            width: '100%', padding: 10, background: '#1a237e', color: '#fff',
-            border: 'none', borderRadius: 4, fontSize: 16, cursor: 'pointer',
+          <button type="submit" className="btn btn-primary" style={{
+            width: '100%', padding: '12px 20px', fontSize: 15,
+            justifyContent: 'center', borderRadius: 6,
           }}>
             Accedi
           </button>
         </form>
+
+        <p style={{ textAlign: 'center', marginTop: 20, fontSize: 12, color: 'var(--steel-light)' }}>
+          KG 26.5 — Software di calcolo stabilità
+        </p>
       </div>
     </div>
   );

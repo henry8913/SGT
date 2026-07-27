@@ -23,47 +23,53 @@ export default function Carichi() {
 
   return (
     <div>
-      <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
-        <button onClick={() => navigate(`/progetto/${id}/stabilita`)} style={{ padding: '8px 16px', background: '#e8eaf6', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 13 }}>
-          Dashboard Stabilità
-        </button>
-        <button onClick={() => navigate(`/progetto/${id}/diagramma`)} style={{ padding: '8px 16px', background: '#e8eaf6', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 13 }}>
-          Diagramma Carico
-        </button>
+      <div className="page-header flex justify-between items-center flex-wrap gap-3">
+        <div>
+          <h1>Carichi Ralla e Base</h1>
+          <p>V, Mr, Mw, Mtot, T per condizioni P01, P02, P03</p>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={() => navigate(`/progetto/${id}/stabilita`)} className="btn btn-ghost btn-sm">Stabilità</button>
+          <button onClick={() => navigate(`/progetto/${id}/diagramma`)} className="btn btn-ghost btn-sm">Diagramma</button>
+        </div>
       </div>
 
-      <h2 style={{ marginBottom: 16 }}>Carichi Ralla e Base</h2>
-
       {!carichi ? (
-        <p style={{ color: '#999' }}>Nessun risultato disponibile.</p>
+        <div className="card" style={{ textAlign: 'center', padding: 48, color: 'var(--text-secondary)' }}>
+          Nessun risultato disponibile.
+        </div>
       ) : (
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-            <thead>
-              <tr style={{ background: '#f5f5f5' }}>
-                <th style={{ padding: 8, border: '1px solid #ddd', textAlign: 'left' }}>Cond.</th>
-                <th style={{ padding: 8, border: '1px solid #ddd' }}>V (kg)</th>
-                <th style={{ padding: 8, border: '1px solid #ddd' }}>Mr (kgm)</th>
-                <th style={{ padding: 8, border: '1px solid #ddd' }}>Mw (kgm)</th>
-                <th style={{ padding: 8, border: '1px solid #ddd' }}>Mtot (kgm)</th>
-                <th style={{ padding: 8, border: '1px solid #ddd' }}>T (kg)</th>
-                <th style={{ padding: 8, border: '1px solid #ddd' }}>Mtot OUT/IN</th>
-              </tr>
-            </thead>
-            <tbody>
-              {carichi.conditions?.map(c => (
-                <tr key={c.condition_id}>
-                  <td style={{ padding: 8, border: '1px solid #ddd', fontWeight: 600 }}>{c.condition_id}</td>
-                  <td style={{ padding: 8, border: '1px solid #ddd' }}>{c.v?.toLocaleString()}</td>
-                  <td style={{ padding: 8, border: '1px solid #ddd' }}>{c.mr?.toLocaleString()}</td>
-                  <td style={{ padding: 8, border: '1px solid #ddd' }}>{c.mw?.toLocaleString()}</td>
-                  <td style={{ padding: 8, border: '1px solid #ddd' }}>{c.mtot?.toLocaleString()}</td>
-                  <td style={{ padding: 8, border: '1px solid #ddd' }}>{c.t?.toLocaleString()}</td>
-                  <td style={{ padding: 8, border: '1px solid #ddd', fontWeight: 600 }}>{c.mtot_out_in_ratio}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="card">
+          <div className="card-body">
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Cond.</th>
+                    <th>V (kg)</th>
+                    <th>Mr (kgm)</th>
+                    <th>Mw (kgm)</th>
+                    <th>Mtot (kgm)</th>
+                    <th>T (kg)</th>
+                    <th>Mtot OUT/IN</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {carichi.conditions?.map(c => (
+                    <tr key={c.condition_id}>
+                      <td style={{ fontWeight: 600 }}>{c.condition_id}</td>
+                      <td>{c.v?.toLocaleString()}</td>
+                      <td>{c.mr?.toLocaleString()}</td>
+                      <td>{c.mw?.toLocaleString()}</td>
+                      <td>{c.mtot?.toLocaleString()}</td>
+                      <td>{c.t?.toLocaleString()}</td>
+                      <td style={{ fontWeight: 600 }}>{c.mtot_out_in_ratio}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       )}
     </div>
