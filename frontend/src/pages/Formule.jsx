@@ -107,7 +107,7 @@ export default function Formule() {
                       <div className="flex gap-2">
                         <input value={editText} onChange={e => setEditText(e.target.value)}
                           style={{ flex: 1, padding: 4, border: '1.5px solid var(--yellow)', borderRadius: 3, fontSize: 11, fontFamily: 'monospace' }} />
-                        <button onClick={() => saveFormula(f.id)} className="btn btn-xs btn-crane">Salva</button>
+                        <button onClick={() => saveFormula(f.id)} className="btn btn-xs btn-yellow">Salva</button>
                         <button onClick={() => setEditId(null)} className="btn btn-xs btn-ghost">X</button>
                       </div>
                     ) : (

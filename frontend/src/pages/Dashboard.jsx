@@ -50,7 +50,7 @@ export default function Dashboard() {
             style={{ width: 240, background: '#fff' }}
             onKeyDown={(e) => e.key === 'Enter' && createProject()}
           />
-          <button onClick={createProject} className="btn btn-crane">
+          <button onClick={createProject} className="btn btn-yellow">
             + Nuovo progetto
           </button>
         </div>

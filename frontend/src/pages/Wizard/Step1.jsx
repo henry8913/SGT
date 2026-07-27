@@ -53,7 +53,7 @@ export default function Step1() {
           </div>
           <div className="flex gap-3 justify-between" style={{ marginTop: 28 }}>
             <button onClick={() => navigate('/dashboard')} className="btn btn-ghost">Annulla</button>
-            <button onClick={handleSave} className="btn btn-crane">Salva e continua →</button>
+            <button onClick={handleSave} className="btn btn-yellow">Salva e continua →</button>
           </div>
         </div>
       </div>

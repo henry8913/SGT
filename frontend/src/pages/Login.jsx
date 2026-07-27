@@ -23,52 +23,39 @@ export default function Login() {
 
   return (
     <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'linear-gradient(135deg, #FFB300 0%, #e6a200 50%, #FFB300 100%)',
-      padding: 20,
+      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: 'var(--gray-bg)', padding: 20,
     }}>
       <div style={{
-        background: '#fff',
-        padding: 48,
-        borderRadius: 16,
-        boxShadow: '0 12px 40px rgba(0,0,0,0.15)',
-        width: '100%',
-        maxWidth: 400,
+        background: '#fff', padding: 48, borderRadius: 16,
+        boxShadow: '0 8px 30px rgba(0,0,0,0.06)',
+        width: '100%', maxWidth: 400,
+        borderTop: '4px solid #D4A017',
       }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{
-            width: 72, height: 72, borderRadius: 16,
-            background: '#FFB300', display: 'inline-flex',
-            alignItems: 'center', justifyContent: 'center',
-            marginBottom: 16,
-          }}>
-            <img src="/favicon.svg" alt="SGT" style={{ width: 48, height: 48 }} />
-          </div>
-          <h1 style={{ fontSize: 28, color: '#1a1a2e', marginBottom: 2, letterSpacing: '-0.5px' }}>SGT</h1>
-          <p style={{ color: '#6c757d', fontSize: 14 }}>Stabilità delle Gru a Torre</p>
-          <p style={{ color: '#adb5bd', fontSize: 11, marginTop: 4 }}>KG 26.5</p>
+          <img src="/favicon.svg" alt="SGT" style={{ width: 64, height: 64, marginBottom: 16 }} />
+          <h1 style={{ fontSize: 26, color: '#1e1e2e', marginBottom: 2, letterSpacing: '-0.5px' }}>SGT</h1>
+          <p style={{ color: '#6b7280', fontSize: 14 }}>Stabilità delle Gru a Torre</p>
+          <p style={{ color: '#9ca3af', fontSize: 11, marginTop: 4 }}>KG 26.5</p>
         </div>
 
         {error && <div className="msg msg-error">{error}</div>}
 
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: 20 }}>
-            <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 600, color: '#1a1a2e' }}>Username</label>
+            <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 600, color: '#1e1e2e' }}>Username</label>
             <input type="text" value={form.username} onChange={e => setForm({...form, username: e.target.value})} placeholder="Il tuo username" required />
           </div>
           <div style={{ marginBottom: 28 }}>
-            <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 600, color: '#1a1a2e' }}>Password</label>
+            <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 600, color: '#1e1e2e' }}>Password</label>
             <input type="password" value={form.password} onChange={e => setForm({...form, password: e.target.value})} placeholder="••••••••" required />
           </div>
-          <button type="submit" className="btn btn-crane" style={{ width: '100%', padding: '12px 20px', fontSize: 15, justifyContent: 'center', fontWeight: 700 }}>
+          <button type="submit" className="btn btn-dark" style={{ width: '100%', padding: '12px 20px', fontSize: 15, justifyContent: 'center' }}>
             Accedi
           </button>
         </form>
 
-        <p style={{ textAlign: 'center', marginTop: 24, fontSize: 11, color: '#adb5bd' }}>
+        <p style={{ textAlign: 'center', marginTop: 24, fontSize: 11, color: '#d1d5db' }}>
           Stabilità delle Gru a Torre — KG 26.5
         </p>
       </div>

@@ -31,7 +31,7 @@ export default function Calcola() {
 
       {!result && !loading && (
         <div className="card" style={{ textAlign: 'center', padding: 64 }}>
-          <button onClick={runCalculation} className="btn btn-crane" style={{ fontSize: 16, padding: '14px 36px' }}>
+          <button onClick={runCalculation} className="btn btn-yellow" style={{ fontSize: 16, padding: '14px 36px' }}>
             ▶ Avvia calcolo
           </button>
           <p style={{ marginTop: 12, color: 'var(--gray)', fontSize: 13 }}>
@@ -55,7 +55,7 @@ export default function Calcola() {
             Calcolo completato! {result.steps_completed?.length || 0} step eseguiti.
           </div>
           <div className="flex gap-3 flex-wrap">
-            <button onClick={() => navigate(`/progetto/${projectId}/stabilita`)} className="btn btn-crane">
+            <button onClick={() => navigate(`/progetto/${projectId}/stabilita`)} className="btn btn-yellow">
               Dashboard Stabilità
             </button>
             <button onClick={() => navigate(`/progetto/${projectId}/carichi`)} className="btn btn-ghost">
