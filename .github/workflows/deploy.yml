@@ -19,5 +19,6 @@ jobs:
           script: |
             cd /var/www/SGT
             git pull origin main
+            docker compose down
             docker compose up --build -d
             echo "✅ Deploy completato"
