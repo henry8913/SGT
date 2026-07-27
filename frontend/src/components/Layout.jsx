@@ -15,10 +15,12 @@ export default function Layout({ children }) {
 
   const isActive = (path) => {
     if (path === '/dashboard') return location.pathname === '/dashboard';
+    if (path === '/') return location.pathname === '/';
     return location.pathname.startsWith(path);
   };
 
   const navLinks = [
+    { to: '/', label: 'Home' },
     { to: '/dashboard', label: 'Progetti' },
     { to: '/formule', label: 'Formule' },
     { to: '/settings/password', label: 'Password' },
@@ -41,7 +43,7 @@ export default function Layout({ children }) {
         boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
-          <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
             <img src="/favicon.svg" alt="" style={{ width: 30, height: 30 }} />
             <span style={{ color: '#1e1e2e', fontWeight: 800, fontSize: 20, letterSpacing: '-0.5px' }}>SGT</span>
           </Link>
