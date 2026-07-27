@@ -77,7 +77,7 @@ export default function AdminUsers() {
             Non potrà creare altri utenti — questa è una funzione solo tua.
           </div>
           <button onClick={createUser} style={{
-            padding: '10px 20px', background: #1e1e2e, color: '#fff',
+            padding: '10px 20px', background: '#1e1e2e', color: '#fff',
             border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 14,
           }}>
             Crea utente
