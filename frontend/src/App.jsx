@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
+import Home from './pages/Home';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Step1 from './pages/Wizard/Step1';
@@ -19,14 +20,14 @@ import AdminUsers from './pages/Admin/Users';
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem('token');
-  if (!token) return <Navigate to="/" replace />;
+  if (!token) return <Navigate to="/login" replace />;
   return children;
 }
 
 function AdminRoute({ children }) {
   const token = localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-  if (!token) return <Navigate to="/" replace />;
+  if (!token) return <Navigate to="/login" replace />;
   if (!user.is_admin) return <Navigate to="/dashboard" replace />;
   return children;
 }
@@ -35,7 +36,8 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Login />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
         <Route
           path="/dashboard"
           element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>}
