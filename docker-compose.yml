@@ -24,14 +24,6 @@ services:
       - "8765:80"
     depends_on:
       - backend
-    networks:
-      - sgt_default
-      - npm_default
-
-networks:
-  sgt_default:
-  npm_default:
-    external: true
 
 volumes:
   sgt_data:
