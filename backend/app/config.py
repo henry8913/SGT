@@ -10,7 +10,8 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 480
 
     admin__enable: bool = True
-    admin__username: str = "admin@local.it"
+    admin__mail: str = "admin@local.it"
+    admin__username: str = "admin"
     admin__password: str = "CambiaQuestaPassword!"
 
 

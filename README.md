@@ -68,7 +68,8 @@ Crea `backend/.env`:
 
 ```
 ADMIN__ENABLE=true
-ADMIN__USERNAME=admin@local.it
+ADMIN__MAIL=admin@local.it
+ADMIN__USERNAME=admin
 ADMIN__PASSWORD=CambiaQuestaPassword!
 ```
 

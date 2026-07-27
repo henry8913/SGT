@@ -17,17 +17,18 @@ def seed_database():
     db: Session = SessionLocal()
 
     if app_settings.admin__enable:
-        admin_username = app_settings.admin__username.split("@")[0] if "@" in app_settings.admin__username else app_settings.admin__username
+        admin_username = app_settings.admin__username
+        admin_email = app_settings.admin__mail or app_settings.admin__username
         admin_password_hash = bcrypt.hashpw(app_settings.admin__password.encode(), bcrypt.gensalt()).decode()
         admin = db.query(User).filter(User.username == admin_username).first()
         if admin:
-            admin.email = app_settings.admin__username
+            admin.email = admin_email
             admin.hashed_password = admin_password_hash
             admin.is_admin = True
             print(f"Updated admin user ({admin_username})")
         else:
             admin = User(
-                email=app_settings.admin__username,
+                email=admin_email,
                 username=admin_username,
                 hashed_password=admin_password_hash,
                 is_admin=True,
