@@ -18,7 +18,7 @@ export default function AdminUsers() {
   const createUser = async () => {
     setMsg({ type: '', text: '' });
     try {
-      await auth.register({ ...form, is_admin: true });
+      await auth.register({ ...form, is_admin: false });
       setForm({ email: '', username: '', password: '' });
       setMsg({ type: 'success', text: 'Utente creato con successo!' });
       loadUsers();
@@ -74,6 +74,7 @@ export default function AdminUsers() {
           </div>
           <div style={{ fontSize: 12, color: '#666', background: '#f5f5f5', padding: 8, borderRadius: 4 }}>
             L'utente potrà cambiarsi la password dopo il primo accesso.
+            Non potrà creare altri utenti — questa è una funzione solo tua.
           </div>
           <button onClick={createUser} style={{
             padding: '10px 20px', background: '#1a237e', color: '#fff',
