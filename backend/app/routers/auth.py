@@ -4,6 +4,7 @@ import bcrypt
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -85,3 +86,64 @@ def register(
     db.commit()
     db.refresh(user)
     return user
+
+
+class ChangePasswordRequest(BaseModel):
+    old_password: str
+    new_password: str
+
+
+class ChangePasswordResponse(BaseModel):
+    message: str
+
+
+@router.put("/password", response_model=ChangePasswordResponse)
+def change_password(
+    req: ChangePasswordRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if not verify_password(req.old_password, current_user.hashed_password):
+        raise HTTPException(status_code=400, detail="Old password is incorrect")
+    current_user.hashed_password = hash_password(req.new_password)
+    db.commit()
+    return ChangePasswordResponse(message="Password changed successfully")
+
+
+class AdminUserResponse(BaseModel):
+    id: int
+    username: str
+    email: str
+    is_admin: bool
+    is_active: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+@router.get("/users", response_model=list[AdminUserResponse])
+def list_users(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Only admins can list users")
+    return db.query(User).order_by(User.created_at.desc()).all()
+
+
+@router.delete("/users/{user_id}", status_code=204)
+def delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Only admins can delete users")
+    if current_user.id == user_id:
+        raise HTTPException(status_code=400, detail="Cannot delete yourself")
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    db.delete(user)
+    db.commit()

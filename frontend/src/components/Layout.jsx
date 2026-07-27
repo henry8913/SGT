@@ -24,6 +24,7 @@ export default function Layout({ children }) {
           <Link to="/dashboard" style={{ color: '#fff', textDecoration: 'none' }}>Progetti</Link>
           <Link to="/formule" style={{ color: '#fff', textDecoration: 'none' }}>Formule</Link>
           <Link to="/settings/profili" style={{ color: '#fff', textDecoration: 'none' }}>Impostazioni</Link>
+          <Link to="/settings/password" style={{ color: '#fff', textDecoration: 'none' }}>Password</Link>
           {user.is_admin && (
             <Link to="/admin/users" style={{ color: '#fff', textDecoration: 'none' }}>Admin</Link>
           )}

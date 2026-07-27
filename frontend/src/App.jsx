@@ -14,6 +14,7 @@ import Carichi from './pages/Progetto/Carichi';
 import Diagramma from './pages/Progetto/Diagramma';
 import Formule from './pages/Formule';
 import SettingsProfili from './pages/Settings/Profili';
+import Password from './pages/Settings/Password';
 import AdminUsers from './pages/Admin/Users';
 
 function ProtectedRoute({ children }) {
@@ -78,6 +79,10 @@ export default function App() {
         <Route
           path="/settings/profili"
           element={<ProtectedRoute><Layout><SettingsProfili /></Layout></ProtectedRoute>}
+        />
+        <Route
+          path="/settings/password"
+          element={<ProtectedRoute><Layout><Password /></Layout></ProtectedRoute>}
         />
         <Route
           path="/admin/users"
