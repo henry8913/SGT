@@ -92,7 +92,7 @@ export default function FormulaPopover({ step, campo, label, currentValue }) {
                 )}
                 {editMode && user.is_admin && (
                   <>
-                    <button onClick={saveFormula} className="btn btn-primary btn-sm">Salva</button>
+                    <button onClick={saveFormula} className="btn btn-crane btn-sm">Salva</button>
                     <button onClick={() => setEditMode(false)} className="btn btn-ghost btn-sm">Annulla</button>
                   </>
                 )}

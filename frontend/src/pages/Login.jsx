@@ -27,22 +27,28 @@ export default function Login() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(135deg, #212529 0%, #343A40 50%, #212529 100%)',
+      background: 'linear-gradient(135deg, #FFB300 0%, #e6a200 50%, #FFB300 100%)',
       padding: 20,
     }}>
       <div style={{
         background: '#fff',
         padding: 48,
-        borderRadius: 12,
-        boxShadow: '0 12px 40px rgba(0,0,0,0.25)',
+        borderRadius: 16,
+        boxShadow: '0 12px 40px rgba(0,0,0,0.15)',
         width: '100%',
         maxWidth: 400,
-        borderTop: '4px solid #FFB300',
       }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <img src="/favicon.svg" alt="SGT" style={{ width: 64, height: 64, marginBottom: 16 }} />
-          <h1 style={{ fontSize: 24, color: '#212529', marginBottom: 4, letterSpacing: '-0.5px' }}>SGT</h1>
-          <p style={{ color: '#6C757D', fontSize: 14 }}>Stabilità delle Gru a Torre</p>
+          <div style={{
+            width: 72, height: 72, borderRadius: 16,
+            background: '#FFB300', display: 'inline-flex',
+            alignItems: 'center', justifyContent: 'center',
+            marginBottom: 16,
+          }}>
+            <img src="/favicon.svg" alt="SGT" style={{ width: 48, height: 48 }} />
+          </div>
+          <h1 style={{ fontSize: 28, color: '#1a1a2e', marginBottom: 2, letterSpacing: '-0.5px' }}>SGT</h1>
+          <p style={{ color: '#6c757d', fontSize: 14 }}>Stabilità delle Gru a Torre</p>
           <p style={{ color: '#adb5bd', fontSize: 11, marginTop: 4 }}>KG 26.5</p>
         </div>
 
@@ -50,21 +56,14 @@ export default function Login() {
 
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: 20 }}>
-            <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 600, color: '#212529' }}>
-              Username
-            </label>
+            <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 600, color: '#1a1a2e' }}>Username</label>
             <input type="text" value={form.username} onChange={e => setForm({...form, username: e.target.value})} placeholder="Il tuo username" required />
           </div>
           <div style={{ marginBottom: 28 }}>
-            <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 600, color: '#212529' }}>
-              Password
-            </label>
+            <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 600, color: '#1a1a2e' }}>Password</label>
             <input type="password" value={form.password} onChange={e => setForm({...form, password: e.target.value})} placeholder="••••••••" required />
           </div>
-          <button type="submit" className="btn btn-accent" style={{
-            width: '100%', padding: '12px 20px', fontSize: 15,
-            justifyContent: 'center', borderRadius: 6, fontWeight: 700,
-          }}>
+          <button type="submit" className="btn btn-crane" style={{ width: '100%', padding: '12px 20px', fontSize: 15, justifyContent: 'center', fontWeight: 700 }}>
             Accedi
           </button>
         </form>

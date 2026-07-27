@@ -53,7 +53,7 @@ export default function Step4() {
           </div>
           <div className="flex gap-3 justify-between" style={{ marginTop: 24 }}>
             <button onClick={() => navigate(`/nuovo-progetto/step-3?projectId=${projectId}`)} className="btn btn-ghost">← Indietro</button>
-            <button onClick={saveAll} className="btn btn-accent">Salva e continua →</button>
+            <button onClick={saveAll} className="btn btn-crane">Salva e continua →</button>
           </div>
         </div>
       </div>

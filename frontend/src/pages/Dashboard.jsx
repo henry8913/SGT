@@ -50,7 +50,7 @@ export default function Dashboard() {
             style={{ width: 240, background: '#fff' }}
             onKeyDown={(e) => e.key === 'Enter' && createProject()}
           />
-          <button onClick={createProject} className="btn btn-primary">
+          <button onClick={createProject} className="btn btn-crane">
             + Nuovo progetto
           </button>
         </div>
@@ -58,9 +58,9 @@ export default function Dashboard() {
 
       {list.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: 64 }}>
-          <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.3 }}>🏗️</div>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 15 }}>Nessun progetto ancora.</p>
-          <p style={{ color: 'var(--steel-light)', fontSize: 13, marginTop: 4 }}>Creane uno nuovo per iniziare una verifica di stabilità.</p>
+          <img src="/favicon.svg" alt="" style={{ width: 64, height: 64, marginBottom: 16, opacity: 0.3 }} />
+          <p style={{ color: 'var(--gray)', fontSize: 15 }}>Nessun progetto ancora.</p>
+          <p style={{ color: '#adb5bd', fontSize: 13, marginTop: 4 }}>Creane uno nuovo per iniziare una verifica di stabilità.</p>
         </div>
       ) : (
         <div style={{ display: 'grid', gap: 12 }}>
