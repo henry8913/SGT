@@ -7,6 +7,7 @@ import ComeFunziona from './pages/ComeFunziona';
 import Piani from './pages/Piani';
 import ChiSiamo from './pages/ChiSiamo';
 import Blog from './pages/Blog';
+import BlogPost from './pages/BlogPost';
 import Contatto from './pages/Contatto';
 import Step1 from './pages/Wizard/Step1';
 import Step2 from './pages/Wizard/Step2';
@@ -47,6 +48,7 @@ export default function App() {
         <Route path="/piani" element={<Piani />} />
         <Route path="/chi-siamo" element={<ChiSiamo />} />
         <Route path="/blog" element={<Blog />} />
+        <Route path="/blog/:slug" element={<BlogPost />} />
         <Route path="/contatto" element={<Contatto />} />
         <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
         <Route path="/nuovo-progetto/step-1" element={<ProtectedRoute><Layout><Step1 /></Layout></ProtectedRoute>} />
