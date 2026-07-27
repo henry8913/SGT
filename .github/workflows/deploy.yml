@@ -19,6 +19,7 @@ jobs:
           script: |
             cd /var/www/SGT
             git pull origin main
+            docker compose build --no-cache backend frontend
             docker compose down
-            docker compose up -d --build
+            docker compose up -d
             echo "✅ Deploy completato"
