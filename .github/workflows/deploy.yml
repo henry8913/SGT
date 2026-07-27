@@ -17,8 +17,10 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            set -e
             cd /var/www/SGT
             git pull origin main
-            docker compose down
-            docker compose up --build -d
+            docker compose down --remove-orphans
+            docker compose build --no-cache
+            docker compose up -d
             echo "✅ Deploy completato"
