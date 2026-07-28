@@ -24,6 +24,9 @@ export default function Verifica() {
   const [editText, setEditText] = useState('');
   const [inputValues, setInputValues] = useState({});
   const [saving, setSaving] = useState(false);
+  const [uploadFile, setUploadFile] = useState(null);
+  const [uploadMsg, setUploadMsg] = useState('');
+  const [uploading, setUploading] = useState(false);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   useEffect(() => {
@@ -62,6 +65,25 @@ export default function Verifica() {
     setCurrentStep(idx);
     setInputValues({});
     await loadStep(selectedProject, STEPS[idx].key);
+  };
+
+  const handleUpload = async () => {
+    if (!uploadFile) return;
+    setUploading(true);
+    setUploadMsg('');
+    try {
+      const formData = new FormData();
+      formData.append('file', uploadFile);
+      const res = await api.post('/formulas/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setUploadMsg(`✅ ${res.data.message}`);
+      setUploadFile(null);
+      if (selectedProject) await loadStep(selectedProject, stepKey);
+    } catch (err) {
+      setUploadMsg(`❌ ${err.response?.data?.detail || 'Errore'}`);
+    }
+    setUploading(false);
   };
 
   const handleCalculate = async () => {
@@ -148,6 +170,22 @@ export default function Verifica() {
       </div>
 
       {/* Project selector */}
+      {/* Upload Excel section */}
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="card-body" style={{ padding: '12px 16px', display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 13, fontWeight: 600 }}>📂 Carica Excel aggiornato:</span>
+          <input type="file" accept=".xlsm,.xlsx" onChange={e => setUploadFile(e.target.files[0])} style={{ fontSize: 12, flex: 1, minWidth: 150, padding: 4 }} />
+          <button onClick={handleUpload} disabled={!uploadFile || uploading} style={{
+            padding: '6px 14px', borderRadius: 4, border: 'none',
+            background: !uploadFile ? '#e5e7eb' : '#D4A017', color: !uploadFile ? '#9ca3af' : '#fff',
+            cursor: !uploadFile ? 'not-allowed' : 'pointer', fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap',
+          }}>
+            {uploading ? 'Caricamento...' : 'Carica e importa'}
+          </button>
+          {uploadMsg && <span style={{ fontSize: 12 }}>{uploadMsg}</span>}
+        </div>
+      </div>
+
       <div className="card" style={{ marginBottom: 24 }}>
         <div className="card-body">
           <label style={{ fontWeight: 600, fontSize: 13, display: 'block', marginBottom: 8 }}>1. Seleziona un progetto</label>
