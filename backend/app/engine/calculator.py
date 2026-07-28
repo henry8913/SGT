@@ -3,10 +3,6 @@ import json
 from sqlalchemy.orm import Session
 
 from app.engine.excel_engine import run_engine
-from app.engine.step1_baricentri import calculate_baricentri
-from app.engine.step2_curve_carico import calculate_load_curves
-from app.engine.step3_aree_vento import calculate_wind_areas
-from app.engine.step4_vento import calculate_wind
 from app.engine.step5_stabilita_q import calculate_stabilita_q
 from app.engine.step6_stabilita_d import calculate_stabilita_d
 from app.engine.step7_carichi_ralla import calculate_carichi_ralla
@@ -37,48 +33,19 @@ class Calculator:
         self.db.commit()
 
     def run_all(self) -> dict:
-        excel = run_engine(self.project_id, self.db)
+        print(f"[Calculator] Running Excel engine for project {self.project_id}...")
+        excel_results = run_engine(self.project_id, self.db)
 
-        for step_key, data in excel.items():
-            self._save_result(step_key, data)
+        if "error" in excel_results:
+            error_msg = excel_results["error"]
+            print(f"[Calculator] Excel engine error: {error_msg}")
+            print(f"[Calculator] Traceback: {excel_results.get('traceback', 'N/A')}")
+        else:
+            for step_key, data in excel_results.items():
+                self._save_result(step_key, data)
+                print(f"[Calculator] Saved {step_key}: {data.get('cells', 0)} cells calculated")
 
-        baricentri = calculate_baricentri(self.project_id, self.db)
-        baricentri_data = {
-            "x_cg": round(baricentri.x_cg, 2),
-            "y_cg": round(baricentri.y_cg, 2),
-            "z_cg": round(baricentri.z_cg, 2),
-            "total_mass": round(baricentri.total_mass, 2),
-            "moment_x": round(baricentri.moment_x, 2),
-            "moment_y": round(baricentri.moment_y, 2),
-            "moment_z": round(baricentri.moment_z, 2),
-        }
-        self._save_result("baricentri", baricentri_data)
-
-        load_curves = calculate_load_curves(self.project_id, self.db)
-        load_curves_data = [{"raggio": lc.raggio, "carico_max": lc.carico_max} for lc in load_curves]
-        self._save_result("curve_carico", {"curve": load_curves_data})
-
-        wind_areas = calculate_wind_areas(self.project_id, self.db)
-        wind_areas_data = {
-            "a_b": wind_areas.a_b,
-            "a_rc": wind_areas.a_rc,
-            "a_cb": wind_areas.a_cb,
-            "a_pu": wind_areas.a_pu,
-        }
-        self._save_result("aree_vento", wind_areas_data)
-
-        wind = calculate_wind(self.project_id, self.db, wind_areas, q_ref=100.0, h=70.0)
-        wind_data = {
-            "fw_braccio": round(wind.fw_braccio, 2),
-            "fw_rotazione": round(wind.fw_rotazione, 2),
-            "fw_controbraccio": round(wind.fw_controbraccio, 2),
-            "fw_carico": round(wind.fw_carico, 2),
-            "fw_total": round(wind.fw_total, 2),
-            "moment_wind": round(wind.moment_wind, 2),
-        }
-        self._save_result("vento", wind_data)
-
-        stab_q = calculate_stabilita_q(self.project_id, self.db, baricentri_data, wind_data)
+        stab_q = calculate_stabilita_q(self.project_id, self.db, {}, {})
         stab_q_data = {
             "conditions": [
                 {"condition_id": c.condition_id, "v": c.v, "mr": c.mr, "mw": c.mw,
@@ -89,7 +56,7 @@ class Calculator:
         }
         self._save_result("stabilita_q", stab_q_data)
 
-        stab_d = calculate_stabilita_d(self.project_id, self.db, stab_q_data, baricentri_data, wind_data)
+        stab_d = calculate_stabilita_d(self.project_id, self.db, stab_q_data, {}, {})
         stab_d_data = {
             "conditions": [
                 {"condition_id": c.condition_id, "v": c.v, "mr": c.mr, "mw": c.mw,
@@ -100,7 +67,7 @@ class Calculator:
         }
         self._save_result("stabilita_d", stab_d_data)
 
-        carichi = calculate_carichi_ralla(self.project_id, self.db, stab_q_data, stab_d_data, wind_data)
+        carichi = calculate_carichi_ralla(self.project_id, self.db, stab_q_data, stab_d_data, {})
         carichi_data = {
             "conditions": [
                 {"condition_id": c.condition_id, "v": c.v, "mr": c.mr, "mw": c.mw,
@@ -114,6 +81,11 @@ class Calculator:
             {"massa_kg": m.massa_kg, "braccio_m": m.braccio_m, "componente": m.componente}
             for m in self.db.query(Mass).filter(Mass.project_id == self.project_id).all()
         ]
+        from app.engine.step2_curve_carico import calculate_load_curves
+        load_curves = calculate_load_curves(self.project_id, self.db)
+        load_curves_data = [{"raggio": lc.raggio, "carico_max": lc.carico_max} for lc in load_curves]
+
+        from app.engine.step8_diagramma import calculate_diagramma
         diagramma = calculate_diagramma(self.project_id, self.db, load_curves_data, masses_data)
         diagramma_data = {
             "points": [
@@ -123,12 +95,20 @@ class Calculator:
         }
         self._save_result("diagramma", diagramma_data)
 
+        baricentri_data = excel_results.get("baricentri", {}).get("values", {})
+        load_curves_data = excel_results.get("curve_carico", {}).get("values", {})
+        wind_areas_data = {
+            "a_b": len(excel_results.get("aree_vento", {}).get("values", {})),
+        }
+
         return {
-            "excel_engine": {k: {"sheet": v["sheet"], "cells": v["cells"]} for k, v in excel.items()},
+            "excel_engine": {
+                k: {"sheet": v["sheet"], "cells": v["cells"]}
+                for k, v in excel_results.items() if isinstance(v, dict) and "sheet" in v
+            },
             "baricentri": baricentri_data,
             "curve_carico": load_curves_data,
             "aree_vento": wind_areas_data,
-            "vento": wind_data,
             "stabilita_q": stab_q_data,
             "stabilita_d": stab_d_data,
             "carichi_ralla": carichi_data,
