@@ -8,7 +8,7 @@ class FormulaBase(BaseModel):
     sheet: str
     campo: str
     label: str | None = None
-    cell_type: str = "formula"
+    cell_type: str | None = "formula"
     formula: str
     default_value: str | None = None
     dipende_da: str | None = None

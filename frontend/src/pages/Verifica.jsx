@@ -91,9 +91,9 @@ export default function Verifica() {
     } catch (err) { alert('Errore salvataggio formula'); }
   };
 
-  const inputs = cells.filter(c => c.cell_type === 'input');
-  const formulas = cells.filter(c => c.cell_type === 'formula');
-  const constants = cells.filter(c => c.cell_type === 'constant');
+  const inputs = cells.filter(c => (c.cell_type || 'formula') === 'input');
+  const formulas = cells.filter(c => (c.cell_type || 'formula') === 'formula');
+  const constants = cells.filter(c => (c.cell_type || '') === 'constant');
 
   const resultsValues = results?.values || {};
 
