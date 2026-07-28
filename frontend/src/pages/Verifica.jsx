@@ -21,6 +21,9 @@ export default function Verifica() {
   const [formulas, setFormulas] = useState([]);
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const [editText, setEditText] = useState('');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   useEffect(() => {
     projects.list().then(r => setProjectsList(r.data)).catch(() => {});
@@ -68,6 +71,14 @@ export default function Verifica() {
     setCurrentStep(idx);
     setFormulas([]);
     await loadStepData(selectedProject, STEPS[idx].key);
+  };
+
+  const saveFormula = async (id, newFormula) => {
+    try {
+      await formulasApi.update(id, { formula: newFormula });
+      setEditId(null);
+      await loadStepData(selectedProject, STEPS[currentStep].key);
+    } catch (err) { alert('Errore durante il salvataggio della formula'); }
   };
 
   const stepKey = STEPS[currentStep]?.key;
@@ -171,17 +182,38 @@ export default function Verifica() {
                     <div className="table-wrap" style={{ marginBottom: 20, maxHeight: 300, overflowY: 'auto' }}>
                       <table style={{ fontSize: 12 }}>
                         <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
-                          <tr><th style={{ width: 60 }}>Cella</th><th>Formula</th></tr>
+                          <tr>
+                            <th style={{ width: 60 }}>Cella</th>
+                            <th>Formula</th>
+                            {user.is_admin && <th style={{ width: 60 }}>Azioni</th>}
+                          </tr>
                         </thead>
                         <tbody>
                           {formulas.slice(0, 50).map(f => (
                             <tr key={f.id || f.campo}>
                               <td style={{ fontFamily: 'monospace', fontWeight: 600 }}>{f.campo}</td>
-                              <td><code style={{ fontSize: 11, wordBreak: 'break-all' }}>{f.formula}</code></td>
+                              <td>
+                                {editId === f.id ? (
+                                  <div className="flex gap-2">
+                                    <input value={editText} onChange={e => setEditText(e.target.value)}
+                                      style={{ flex: 1, padding: 4, border: '1.5px solid var(--yellow)', borderRadius: 3, fontSize: 11, fontFamily: 'monospace' }} />
+                                    <button onClick={() => saveFormula(f.id, editText)} className="btn btn-xs btn-dark">Salva</button>
+                                    <button onClick={() => setEditId(null)} className="btn btn-xs btn-ghost">X</button>
+                                  </div>
+                                ) : (
+                                  <code style={{ fontSize: 11, wordBreak: 'break-all' }}>{f.formula}</code>
+                                )}
+                              </td>
+                              {user.is_admin && (
+                                <td>
+                                  <button onClick={() => { setEditId(f.id); setEditText(f.formula); }}
+                                    className="btn btn-xs btn-ghost" title="Modifica formula">✏</button>
+                                </td>
+                              )}
                             </tr>
                           ))}
                           {formulas.length > 50 && (
-                            <tr><td colSpan={2} style={{ textAlign: 'center', color: 'var(--gray)', fontSize: 11, padding: 12 }}>
+                            <tr><td colSpan={3} style={{ textAlign: 'center', color: 'var(--gray)', fontSize: 11, padding: 12 }}>
                               + {formulas.length - 50} formule (mostrate prime 50)
                             </td></tr>
                           )}
