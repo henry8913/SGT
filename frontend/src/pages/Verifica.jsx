@@ -67,8 +67,51 @@ export default function Verifica() {
   const handleCalculate = async () => {
     setCalculating(true);
     try {
+      // Save input values to project tables first
+      if (stepKey === 'macchina' || stepKey === 'baricentri') {
+        const machineData = {};
+        inputs.forEach(c => {
+          if (inputValues[c.campo]) {
+            machineData[c.campo] = parseFloat(inputValues[c.campo]) || 0;
+          }
+        });
+        if (Object.keys(machineData).length > 0) {
+          await api.put(`/projects/${selectedProject}/machine`, machineData);
+        }
+      }
+
+      // Save stability params
+      if (['stabilita_q', 'stabilita_d', 'vento', 'carichi_ralla'].includes(stepKey)) {
+        for (const [key, val] of Object.entries(inputValues)) {
+          if (val) {
+            const existing = await api.get(`/projects/${selectedProject}/stability`);
+            const found = existing.data.find(p => p.parametro === key);
+            if (found) {
+              await api.put(`/projects/${selectedProject}/stability/${found.id}`, { valore: parseFloat(val) || 0 });
+            } else {
+              await api.post(`/projects/${selectedProject}/stability`, { parametro: key, valore: parseFloat(val) || 0 });
+            }
+          }
+        }
+      }
+
+      // Save masses
+      if (stepKey === 'masse') {
+        for (const [key, val] of Object.entries(inputValues)) {
+          if (val) {
+            const existing = await api.get(`/projects/${selectedProject}/masses`);
+            const found = existing.data.find(m => m.componente === key);
+            if (found) {
+              await api.put(`/projects/${selectedProject}/masses/${found.id}`, { massa_kg: parseFloat(val) || 0 });
+            } else {
+              await api.post(`/projects/${selectedProject}/masses`, { componente: key, massa_kg: parseFloat(val) || 0 });
+            }
+          }
+        }
+      }
+
+      // Calculate
       const res = await api.post(`/projects/${selectedProject}/calcola`);
-      const data = res.data;
 
       // Re-load results
       const resR = await api.get(`/projects/${selectedProject}/risultati`);
@@ -78,7 +121,7 @@ export default function Verifica() {
         }
       }
     } catch (err) {
-      alert('Errore durante il calcolo: ' + (err.response?.data?.detail || err.message));
+      alert('Errore: ' + (err.response?.data?.detail || err.message));
     }
     setCalculating(false);
   };
