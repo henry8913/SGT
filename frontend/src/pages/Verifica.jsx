@@ -13,6 +13,23 @@ const STEPS = [
   { key: 'diagramma', label: 'Diagramma carico', desc: 'Diagramma carico/raggio' },
 ];
 
+const MACHINE_CELL_MAP = {
+  sbraccio_max: 'S3',
+  carico_punta_tiro2: 'S4',
+  carico_punta_tiro24: 'S5',
+  carico_max_tiro2: 'S6',
+  escursione_carrello_tiro2: 'S7',
+  carico_max_tiro24: 'S8',
+  escursione_carrello_tiro24: 'S9',
+  altezza_max: 'S10',
+  diametro_funi_sollevamento: 'S11',
+  diametro_fune_carrello: 'S12',
+};
+
+const CELL_TO_MACHINE_MAP = Object.fromEntries(
+  Object.entries(MACHINE_CELL_MAP).map(([k, v]) => [v, k])
+);
+
 export default function Verifica() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -58,7 +75,8 @@ export default function Verifica() {
         if (machineRes.data) {
           Object.entries(machineRes.data).forEach(([key, val]) => {
             if (val !== null && val !== undefined && !['id', 'project_id', 'created_at'].includes(key)) {
-              newInputs[key] = String(val);
+              const cell = MACHINE_CELL_MAP[key] || key;
+              newInputs[cell] = String(val);
             }
           });
         }
@@ -114,7 +132,10 @@ export default function Verifica() {
       if (stepKey === 'macchina' || stepKey === 'baricentri') {
         const machineData = {};
         cells.forEach(c => {
-          if (inputValues[c.campo]) machineData[c.campo] = parseFloat(inputValues[c.campo]) || 0;
+          if (inputValues[c.campo]) {
+            const field = CELL_TO_MACHINE_MAP[c.campo] || c.campo;
+            machineData[field] = parseFloat(inputValues[c.campo]) || 0;
+          }
         });
         if (Object.keys(machineData).length > 0) {
           await api.put(`/projects/${selectedProject}/machine`, machineData);

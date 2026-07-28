@@ -39,6 +39,26 @@ def seed_database():
 
     if db.query(Formula).count() == 0:
         all_formulas = [
+            # === CARATTERISTICHE MACCHINA ===
+            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S3", label="Escursione massima del carico utile", formula="65", default_value="65", cell_type="input"),
+            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S4", label="Carico utile massimo in punta braccio con tiro in II, Pta", formula="1800", default_value="1800", cell_type="input"),
+            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S5", label="Carico utile massimo in punta braccio con tiro in II/IV, Pta", formula="1800", default_value="1800", cell_type="input"),
+            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S6", label="Carico utile massimo della macchina con tiro II, Pu", formula="10000", default_value="10000", cell_type="input"),
+            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S7", label="Escursione massima del carrello con carico utile assoluto con tiro in II", formula="16", default_value="16", cell_type="input"),
+            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S8", label="Carico utile massimo della macchina con tiro II/IV, Pu", formula="10000", default_value="10000", cell_type="input"),
+            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S9", label="Escursione massima del carrello con carico utile assoluto con tiro in II/IV", formula="16", default_value="16", cell_type="input"),
+            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S10", label="Altezza massima libera sotto gancio", formula="70", default_value="70", cell_type="input"),
+            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S11", label="Fune di sollevamento", formula="16", default_value="16", cell_type="input"),
+            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S12", label="Fune del carrello", formula="7", default_value="7", cell_type="input"),
+            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S14", label="Derivata 0: Escursione massima del carico utile", formula="S3", dipende_da=json.dumps(["S3"]), cell_type="formula"),
+            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S15", label="Derivata 1: Escursione massima del carico utile", formula="60", default_value="60", cell_type="input"),
+            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S16", label="Derivata 2: Escursione massima del carico utile", formula="55", default_value="55", cell_type="input"),
+            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S17", label="Derivata 3: Escursione massima del carico utile", formula="50", default_value="50", cell_type="input"),
+            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S18", label="Derivata 4: Escursione massima del carico utile", formula="45", default_value="45", cell_type="input"),
+            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S19", label="Derivata 5: Escursione massima del carico utile", formula="40", default_value="40", cell_type="input"),
+            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S20", label="Derivata 6: Escursione massima del carico utile", formula="35", default_value="35", cell_type="input"),
+            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S22", label="Interasse carro di base 4,5x4,5", formula="4.5", default_value="4.5", cell_type="input"),
+
             # === BARICENTRI ===
             Formula(step="baricentri", sheet="Baricentri", campo="AC29", label="Momento statico braccio", formula="Masse_proprie.Q52 * Macchina.S14", dipende_da=json.dumps(["Masse_proprie.Q52", "Macchina.S14"])),
             Formula(step="baricentri", sheet="Baricentri", campo="AD29", label="Coordinata X baricentro", formula="AC29 / Masse_proprie.Q52", dipende_da=json.dumps(["AC29", "Masse_proprie.Q52"])),
