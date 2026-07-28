@@ -40,15 +40,18 @@ export default function PageLayout({ title, subtitle, children }) {
       </nav>
 
       {menuOpen && (
-        <div style={{ background: '#fff', padding: '12px 24px', borderBottom: '2px solid #D4A017' }}>
-          {pages.map(p => (
-            <Link key={p.to} to={p.to} onClick={() => setMenuOpen(false)}
-              style={{ display: 'block', padding: '8px 0', color: '#6b7280', fontSize: 14, textDecoration: 'none', borderBottom: '1px solid #f3f4f6' }}>
-              {p.label}
-            </Link>
-          ))}
-          <Link to="/login" onClick={() => setMenuOpen(false)} style={{ display: 'block', padding: '8px 0', fontWeight: 600, color: '#1e1e2e' }}>Accedi</Link>
-        </div>
+        <>
+          <div onClick={() => setMenuOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 98 }} />
+          <div style={{ position: 'fixed', top: 64, left: 0, right: 0, background: '#fff', padding: '12px 24px', zIndex: 99, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+            {pages.map(p => (
+              <Link key={p.to} to={p.to} onClick={() => setMenuOpen(false)}
+                style={{ display: 'block', padding: '12px 0', color: '#1e1e2e', fontSize: 15, textDecoration: 'none', borderBottom: '1px solid #f3f4f6' }}>
+                {p.label}
+              </Link>
+            ))}
+            <Link to="/login" onClick={() => setMenuOpen(false)} style={{ display: 'block', padding: '12px 0', fontWeight: 700, color: '#D4A017', fontSize: 15 }}>Accedi</Link>
+          </div>
+        </>
       )}
 
       <div style={{

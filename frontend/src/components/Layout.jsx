@@ -73,18 +73,21 @@ export default function Layout({ children }) {
       </nav>
 
       {menuOpen && (
-        <div style={{ background: '#fff', padding: '12px 24px', borderBottom: '2px solid #D4A017' }}>
-          {navLinks.map(l => (
-            <Link key={l.to} to={l.to} onClick={() => setMenuOpen(false)} style={{
-              display: 'block', color: isActive(l.to) ? '#D4A017' : '#6b7280',
-              textDecoration: 'none', padding: '10px 0', fontSize: 14, fontWeight: isActive(l.to) ? 700 : 500,
-              borderBottom: '1px solid #f3f4f6',
-            }}>
-              {l.label}
-            </Link>
-          ))}
-          <div style={{ paddingTop: 10, fontSize: 12, color: '#9ca3af' }}>{user.username}</div>
-        </div>
+        <>
+          <div onClick={() => setMenuOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 98 }} />
+          <div style={{ position: 'fixed', top: 60, left: 0, right: 0, background: '#fff', padding: '12px 24px', zIndex: 99, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+            {navLinks.map(l => (
+              <Link key={l.to} to={l.to} onClick={() => setMenuOpen(false)} style={{
+                display: 'block', color: isActive(l.to) ? '#D4A017' : '#1e1e2e',
+                textDecoration: 'none', padding: '12px 0', fontSize: 15, fontWeight: isActive(l.to) ? 700 : 500,
+                borderBottom: '1px solid #f3f4f6',
+              }}>
+                {l.label}
+              </Link>
+            ))}
+            <div style={{ paddingTop: 12, fontSize: 12, color: '#9ca3af' }}>{user.username}</div>
+          </div>
+        </>
       )}
 
       <main className="container page" style={{ flex: 1 }}>
