@@ -11,6 +11,7 @@ const faqs = [
 
 export default function Home() {
   const [openFaq, setOpenFaq] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const pages = [
     { to: '/', label: 'Home' },
@@ -40,7 +41,23 @@ export default function Home() {
           ))}
           <Link to="/login" className="btn btn-dark btn-sm" style={{ color: '#fff', textDecoration: 'none' }}>Accedi</Link>
         </div>
+        <button onClick={() => setMenuOpen(!menuOpen)} className="mobile-menu-btn"
+          style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', display: 'none', color: '#1e1e2e' }}>
+          {menuOpen ? '✕' : '☰'}
+        </button>
       </nav>
+
+      {menuOpen && (
+        <div style={{ background: '#fff', padding: '12px 24px', borderBottom: '2px solid #D4A017' }}>
+          {pages.map(p => (
+            <Link key={p.to} to={p.to} onClick={() => setMenuOpen(false)}
+              style={{ display: 'block', padding: '10px 0', color: '#1e1e2e', fontSize: 14, textDecoration: 'none', borderBottom: '1px solid #f3f4f6' }}>
+              {p.label}
+            </Link>
+          ))}
+          <Link to="/login" onClick={() => setMenuOpen(false)} style={{ display: 'block', padding: '10px 0', fontWeight: 700, color: '#D4A017' }}>Accedi</Link>
+        </div>
+      )}
 
       {/* Hero */}
       <section style={{ background: 'linear-gradient(135deg, #1e1e2e 0%, #2d2d42 100%)', color: '#fff', padding: '100px 24px' }}>
