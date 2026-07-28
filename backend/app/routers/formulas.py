@@ -103,23 +103,77 @@ def upload_excel(
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error reading Excel file: {str(e)}")
 
+    def _is_blue(cell) -> bool:
+        try:
+            fill = cell.fill
+            if fill and fill.start_color and fill.start_color.rgb:
+                rgb = str(fill.start_color.rgb).upper()
+                # Blue shades commonly used in Excel
+                for blue in ['0000FF', '0070C0', '00B0F0', '4472C4', '5B9BD5', 'BDD7EE', '8DB4E2']:
+                    if blue in rgb:
+                        return True
+                # Check theme color
+                if fill.start_color.theme is not None:
+                    # Blue theme colors are typically 4-7
+                    if fill.start_color.theme in (4, 5, 6, 7):
+                        return True
+        except Exception:
+            pass
+        return False
+
     extracted = []
+    stats = {"formulas": 0, "inputs": 0, "constants": 0}
+
     for sheet_name in wb.sheetnames:
         ws = wb[sheet_name]
         step = STEP_MAP.get(sheet_name, "altro")
-        for row in ws.iter_rows(min_row=1, max_row=ws.max_row, max_col=min(ws.max_column, 150)):
+
+        for row in ws.iter_rows(min_row=1, max_row=ws.max_row, max_col=min(ws.max_column, 120)):
             for cell in row:
-                if cell.value and isinstance(cell.value, str) and cell.value.strip().startswith("="):
-                    formula_text = cell.value.strip()
-                    if formula_text == "=":
-                        continue
+                if cell.value is None:
+                    continue
+
+                cell_text = str(cell.value).strip()
+
+                if cell_text.startswith("=") and cell_text != "=":
                     extracted.append({
                         "step": step,
                         "sheet": sheet_name,
                         "campo": cell.coordinate,
-                        "formula": formula_text,
+                        "cell_type": "formula",
+                        "formula": cell_text,
+                        "default_value": None,
                         "label": f"{sheet_name}_{cell.coordinate}",
                     })
+                    stats["formulas"] += 1
+
+                elif _is_blue(cell):
+                    try:
+                        val = float(cell.value)
+                        extracted.append({
+                            "step": step,
+                            "sheet": sheet_name,
+                            "campo": cell.coordinate,
+                            "cell_type": "input",
+                            "formula": str(val),
+                            "default_value": str(val),
+                            "label": f"{sheet_name}_{cell.coordinate}",
+                        })
+                        stats["inputs"] += 1
+                    except (ValueError, TypeError):
+                        pass
+
+                elif isinstance(cell.value, (int, float)) and not cell_text.startswith("="):
+                    extracted.append({
+                        "step": step,
+                        "sheet": sheet_name,
+                        "campo": cell.coordinate,
+                        "cell_type": "constant",
+                        "formula": str(cell.value),
+                        "default_value": str(cell.value),
+                        "label": f"{sheet_name}_{cell.coordinate}",
+                    })
+                    stats["constants"] += 1
 
     db.query(Formula).delete()
     db.commit()
@@ -136,7 +190,10 @@ def upload_excel(
 
     return {
         "status": "ok",
-        "formule_importate": total,
+        "total": total,
+        "formulas": stats["formulas"],
+        "inputs": stats["inputs"],
+        "constants": stats["constants"],
         "sheets": len(wb.sheetnames),
-        "message": f"Importate {total} formule da {len(wb.sheetnames)} fogli",
+        "message": f"Importate {stats['formulas']} formule, {stats['inputs']} input, {stats['constants']} costanti da {len(wb.sheetnames)} fogli",
     }

@@ -177,25 +177,61 @@ export default function Verifica() {
                         : 'Valori inseriti nel wizard per questo step. Clicca su "Modifica input" per cambiarli.'}
                     </div>
 
+                    {/* Cell type legend */}
+                    <div className="flex gap-3 flex-wrap" style={{ marginBottom: 12, fontSize: 11 }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <span style={{ width: 12, height: 12, borderRadius: 2, background: '#0070C0', display: 'inline-block' }} />
+                        Input (blu)
+                      </span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <span style={{ width: 12, height: 12, borderRadius: 2, background: '#fff', border: '1.5px solid #1e1e2e', display: 'inline-block' }} />
+                        Formula
+                      </span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <span style={{ width: 12, height: 12, borderRadius: 2, background: '#f3f4f6', border: '1px solid #e5e7eb', display: 'inline-block' }} />
+                        Costante
+                      </span>
+                    </div>
+
                     {/* Formulas */}
                     <h3 style={{ fontSize: 14, marginBottom: 8, color: '#D4A017' }}>📐 Formule applicate</h3>
                     <p style={{ fontSize: 12, color: 'var(--gray)', marginBottom: 8 }}>
-                      {formulas.length} formule — stesse celle e riferimenti dell'Excel originale. Copia-incolla esatto.
+                      {formulas.length} celle — stesse celle, stessi riferimenti dell'Excel originale.
                     </p>
-                    <div className="table-wrap" style={{ marginBottom: 20, maxHeight: 500, overflowY: 'auto' }}>
+                    <div className="table-wrap" style={{ marginBottom: 20, maxHeight: 600, overflowY: 'auto' }}>
                       <table style={{ fontSize: 11 }}>
                         <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
                           <tr>
-                            <th style={{ width: 70, fontFamily: 'monospace', color: '#D4A017' }}>Cella</th>
-                            <th>Formula Excel</th>
-                            <th style={{ width: 70 }}>Foglio</th>
+                            <th style={{ width: 60 }}>Cella</th>
+                            <th style={{ width: 50 }}>Tipo</th>
+                            <th>Formula / Valore</th>
+                            <th style={{ width: 60 }}>Foglio</th>
                             {user.is_admin && <th style={{ width: 50 }}>✏</th>}
                           </tr>
                         </thead>
                         <tbody>
-                          {formulas.map(f => (
-                            <tr key={f.id || f.campo}>
-                              <td style={{ fontFamily: 'monospace', fontWeight: 600, fontSize: 11, color: '#D4A017' }}>{f.campo}</td>
+                          {formulas.map(f => {
+                            const isInput = f.cell_type === 'input';
+                            const isConst = f.cell_type === 'constant';
+                            return (
+                            <tr key={f.id || f.campo} style={{
+                              background: isInput ? '#eef7ff' : isConst ? '#fafafa' : '#fff',
+                            }}>
+                              <td style={{
+                                fontFamily: 'monospace', fontWeight: 600, fontSize: 11,
+                                color: isInput ? '#0070C0' : isConst ? '#6b7280' : '#1e1e2e',
+                              }}>{f.campo}</td>
+                              <td>
+                                <span style={{
+                                  display: 'inline-block', padding: '1px 6px', borderRadius: 3,
+                                  fontSize: 9, fontWeight: 600, textTransform: 'uppercase',
+                                  background: isInput ? '#0070C0' : isConst ? '#e5e7eb' : '#fff',
+                                  color: isInput ? '#fff' : isConst ? '#6b7280' : '#1e1e2e',
+                                  border: isConst ? '1px solid #d1d5db' : isInput ? 'none' : '1.5px solid #1e1e2e',
+                                }}>
+                                  {isInput ? 'Input' : isConst ? 'Cost' : 'Fx'}
+                                </span>
+                              </td>
                               <td>
                                 {editId === f.id ? (
                                   <div className="flex gap-2">
@@ -205,8 +241,12 @@ export default function Verifica() {
                                     <button onClick={() => setEditId(null)} className="btn btn-xs btn-ghost">X</button>
                                   </div>
                                 ) : (
-                                  <code style={{ fontSize: 11, fontFamily: 'monospace', wordBreak: 'break-all' }}>
-                                    ={f.formula}
+                                  <code style={{
+                                    fontSize: 11, fontFamily: 'monospace', wordBreak: 'break-all',
+                                    color: isInput ? '#0070C0' : isConst ? '#6b7280' : '#1e1e2e',
+                                    fontWeight: isInput ? 600 : 400,
+                                  }}>
+                                    {isInput ? f.default_value || f.formula : `=${f.formula}`}
                                   </code>
                                 )}
                               </td>
@@ -214,11 +254,11 @@ export default function Verifica() {
                               {user.is_admin && (
                                 <td>
                                   <button onClick={() => { setEditId(f.id); setEditText(f.formula); }}
-                                    className="btn btn-xs btn-ghost" title="Modifica formula">✏</button>
+                                    className="btn btn-xs btn-ghost" title="Modifica">✏</button>
                                 </td>
                               )}
                             </tr>
-                          ))}
+                          );})}
                         </tbody>
                       </table>
                     </div>

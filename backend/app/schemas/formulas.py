@@ -8,7 +8,9 @@ class FormulaBase(BaseModel):
     sheet: str
     campo: str
     label: str | None = None
+    cell_type: str = "formula"
     formula: str
+    default_value: str | None = None
     dipende_da: str | None = None
 
 
@@ -21,7 +23,9 @@ class FormulaUpdate(BaseModel):
     sheet: str | None = None
     campo: str | None = None
     label: str | None = None
+    cell_type: str | None = None
     formula: str | None = None
+    default_value: str | None = None
     dipende_da: str | None = None
 
 
