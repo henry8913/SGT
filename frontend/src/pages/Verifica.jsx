@@ -255,79 +255,79 @@ export default function Verifica() {
                     </div>
                   </div>
 
-                  {/* INPUT cells */}
-                  {inputs.length > 0 && (
-                    <div style={{ marginBottom: 20 }}>
-                      <h3 style={{ fontSize: 13, color: '#0070C0', marginBottom: 8 }}>
-                        📥 Input utente ({inputs.length})
-                      </h3>
-                      <div className="table-wrap" style={{ maxHeight: 250, overflowY: 'auto' }}>
-                        <table style={{ fontSize: 11 }}>
-                          <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
-                            <tr><th style={{ width: 60, color: '#0070C0' }}>Cella</th><th style={{ width: 80 }}>Valore</th><th>Formula / Note</th></tr>
-                          </thead>
-                          <tbody>
-                            {inputs.map(c => (
-                              <tr key={c.id || c.campo} style={{ background: '#eef7ff' }}>
-                                <td style={{ fontFamily: 'monospace', fontWeight: 600, color: '#0070C0', fontSize: 11 }}>{c.campo}</td>
-                                <td>
-                                  <input type="text" defaultValue={c.default_value || ''}
-                                    style={{ width: 80, padding: '3px 6px', fontSize: 11, fontFamily: 'monospace', border: '1px solid #0070C0', background: '#fff' }}
-                                    onChange={e => setInputValues({...inputValues, [c.campo]: e.target.value})} />
-                                </td>
-                                <td style={{ fontSize: 10, color: '#6b7280' }}>{c.sheet}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                  {/* CARICA VALORI — all cells with editable values */}
+                  {cells.length > 0 && (
+                    <div style={{ marginBottom: 20, background: '#fffdf5', border: '1.5px solid #D4A017', borderRadius: 8, padding: 16 }}>
+                      <div className="flex justify-between items-center" style={{ marginBottom: 12 }}>
+                        <h3 style={{ fontSize: 14, color: '#1e1e2e', margin: 0 }}>
+                          📋 Valori di test — {STEPS[currentStep]?.label}
+                        </h3>
+                        <span style={{ fontSize: 11, color: '#6b7280' }}>
+                          {cells.filter(c => c.cell_type === 'input').length > 0
+                            ? `${cells.filter(c => c.cell_type === 'input').length} input rilevati`
+                            : 'Nessun input rilevato — carica Excel per abilitare'}
+                        </span>
                       </div>
-                    </div>
-                  )}
-
-                  {/* FORMULA cells */}
-                  {formulas.length > 0 && (
-                    <div style={{ marginBottom: 20 }}>
-                      <h3 style={{ fontSize: 13, marginBottom: 8 }}>
-                        📐 Formule ({formulas.length})
-                      </h3>
-                      <div className="table-wrap" style={{ maxHeight: 400, overflowY: 'auto' }}>
+                      <p style={{ fontSize: 12, color: '#6b7280', marginBottom: 12 }}>
+                        Inserisci i valori blu (input) per questo step. Poi clicca <strong>"Calcola step"</strong> per vedere i risultati.
+                      </p>
+                      <div className="table-wrap" style={{ maxHeight: 300, overflowY: 'auto' }}>
                         <table style={{ fontSize: 11 }}>
-                          <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
+                          <thead style={{ position: 'sticky', top: 0, zIndex: 1, background: '#fffdf5' }}>
                             <tr>
-                              <th style={{ width: 60 }}>Cella</th>
-                              <th>Formula</th>
-                              <th style={{ width: 80 }}>Risultato</th>
-                              {user.is_admin && <th style={{ width: 40 }}>✏</th>}
+                              <th style={{ width: 60, color: '#D4A017' }}>Cella</th>
+                              <th style={{ width: 80 }}>Valore input</th>
+                              <th>Formula / Tipo</th>
+                              <th style={{ width: 60 }}>Risultato</th>
+                              {user.is_admin && <th style={{ width: 30 }}>✏</th>}
                             </tr>
                           </thead>
                           <tbody>
-                            {formulas.map(f => {
-                              const calcVal = resultsValues[f.campo];
+                            {cells.map(c => {
+                              const isInput = (c.cell_type || '') === 'input';
+                              const isConst = (c.cell_type || '') === 'constant';
+                              const calcVal = resultsValues[c.campo];
                               return (
-                              <tr key={f.id || f.campo}>
-                                <td style={{ fontFamily: 'monospace', fontWeight: 600, fontSize: 11 }}>{f.campo}</td>
+                              <tr key={c.id || c.campo} style={{ background: isInput ? '#eef7ff' : isConst ? '#fafafa' : '#fff' }}>
+                                <td style={{
+                                  fontFamily: 'monospace', fontWeight: 600, fontSize: 11,
+                                  color: isInput ? '#0070C0' : isConst ? '#6b7280' : '#1e1e2e',
+                                }}>{c.campo}</td>
                                 <td>
-                                  {editId === f.id ? (
-                                    <div className="flex gap-2">
-                                      <input value={editText} onChange={e => setEditText(e.target.value)}
-                                        style={{ flex: 1, padding: 3, border: '1.5px solid var(--yellow)', borderRadius: 3, fontSize: 11, fontFamily: 'monospace' }} />
-                                      <button onClick={() => saveFormula(f.id, editText)} className="btn btn-xs btn-dark">Ok</button>
-                                      <button onClick={() => setEditId(null)} className="btn btn-xs btn-ghost">X</button>
-                                    </div>
+                                  {isInput || !isConst ? (
+                                    <input type="text"
+                                      defaultValue={c.default_value || ''}
+                                      placeholder={isInput ? 'valore input' : '—'}
+                                      style={{
+                                        width: 80, padding: '3px 6px', fontSize: 11, fontFamily: 'monospace',
+                                        border: isInput ? '1.5px solid #0070C0' : '1px solid #e5e7eb',
+                                        background: '#fff',
+                                      }}
+                                      onChange={e => setInputValues({...inputValues, [c.campo]: e.target.value})} />
                                   ) : (
-                                    <code style={{ fontSize: 11, fontFamily: 'monospace', wordBreak: 'break-all' }}>{f.formula}</code>
+                                    <span style={{ color: '#6b7280', fontSize: 11 }}>{c.default_value || c.formula}</span>
                                   )}
                                 </td>
+                                <td>
+                                  <span style={{
+                                    display: 'inline-block', padding: '1px 5px', borderRadius: 3, fontSize: 9, fontWeight: 600,
+                                    background: isInput ? '#0070C0' : isConst ? '#e5e7eb' : '#fff',
+                                    color: isInput ? '#fff' : isConst ? '#6b7280' : '#1e1e2e',
+                                    border: isInput ? 'none' : isConst ? '1px solid #d1d5db' : '1px solid #1e1e2e',
+                                    marginRight: 4,
+                                  }}>{isInput ? 'IN' : isConst ? 'CO' : 'FX'}</span>
+                                  <code style={{ fontSize: 10, fontFamily: 'monospace', color: '#6b7280' }}>{c.formula}</code>
+                                </td>
                                 <td style={{
-                                  fontFamily: 'monospace', fontWeight: 600, fontSize: 12,
-                                  color: calcVal !== undefined ? '#1e1e2e' : '#d1d5db',
+                                  fontFamily: 'monospace', fontWeight: 700, fontSize: 12,
+                                  color: calcVal !== undefined ? (isInput ? '#0070C0' : '#1e1e2e') : '#d1d5db',
                                 }}>
                                   {calcVal !== undefined ? (typeof calcVal === 'number' ? calcVal.toLocaleString() : calcVal) : '—'}
                                 </td>
                                 {user.is_admin && (
                                   <td>
-                                    <button onClick={() => { setEditId(f.id); setEditText(f.formula); }}
-                                      className="btn btn-xs btn-ghost">✏</button>
+                                    <button onClick={() => { setEditId(c.id); setEditText(c.formula); }}
+                                      className="btn btn-xs btn-ghost" style={{ padding: '1px 4px', fontSize: 10 }}>✏</button>
                                   </td>
                                 )}
                               </tr>
@@ -335,32 +335,18 @@ export default function Verifica() {
                           </tbody>
                         </table>
                       </div>
-                    </div>
-                  )}
-
-                  {/* CONSTANT cells */}
-                  {constants.length > 0 && (
-                    <div style={{ marginBottom: 20 }}>
-                      <h3 style={{ fontSize: 13, color: '#6b7280', marginBottom: 8 }}>
-                        🔒 Costanti ({constants.length})
-                      </h3>
-                      <div className="table-wrap" style={{ maxHeight: 150, overflowY: 'auto' }}>
-                        <table style={{ fontSize: 11 }}>
-                          <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
-                            <tr><th style={{ width: 60, color: '#6b7280' }}>Cella</th><th>Valore</th></tr>
-                          </thead>
-                          <tbody>
-                            {constants.map(c => (
-                              <tr key={c.id || c.campo} style={{ background: '#fafafa' }}>
-                                <td style={{ fontFamily: 'monospace', fontWeight: 600, fontSize: 11, color: '#6b7280' }}>{c.campo}</td>
-                                <td style={{ fontSize: 11, color: '#6b7280' }}>{c.default_value || c.formula}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                      <div className="flex gap-2" style={{ marginTop: 12 }}>
+                        <button onClick={handleCalculate} disabled={calculating} className="btn btn-dark btn-sm">
+                          {calculating ? 'Calcolo...' : '💾 Salva valori e calcola'}
+                        </button>
+                        <span style={{ fontSize: 11, color: '#9ca3af', alignSelf: 'center' }}>
+                          I valori vengono salvati nel progetto e usati per il calcolo
+                        </span>
                       </div>
                     </div>
                   )}
+
+                  {/* Edit inline is handled in the Valori di test table above */}
 
                   {/* Results summary */}
                   {results && (
