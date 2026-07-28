@@ -85,6 +85,10 @@ export default function Dashboard() {
                     className="btn btn-ghost btn-sm">
                     Wizard
                   </button>
+                  <button onClick={() => navigate(`/verifica?projectId=${p.id}`)}
+                    className="btn btn-ghost btn-sm">
+                    Verifica
+                  </button>
                   <button onClick={() => navigate(`/progetto/${p.id}/stabilita`)}
                     className="btn btn-ghost btn-sm">
                     Risultati

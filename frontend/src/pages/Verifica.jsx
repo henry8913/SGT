@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import api, { projects, formulas as formulasApi } from '../api/client';
 
 const STEPS = [
@@ -15,6 +15,7 @@ const STEPS = [
 
 export default function Verifica() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [projectsList, setProjectsList] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
   const [currentStep, setCurrentStep] = useState(0);
@@ -30,6 +31,16 @@ export default function Verifica() {
   useEffect(() => {
     projects.list().then(r => setProjectsList(r.data)).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    const urlProjectId = searchParams.get('projectId');
+    if (urlProjectId && projectsList.length > 0) {
+      const id = parseInt(urlProjectId);
+      if (!selectedProject && projectsList.some(p => p.id === id)) {
+        handleProjectSelect(id);
+      }
+    }
+  }, [projectsList]);
 
   const stepKey = STEPS[currentStep]?.key;
 
