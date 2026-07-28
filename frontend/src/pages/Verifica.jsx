@@ -43,6 +43,51 @@ export default function Verifica() {
       const res = await formulasApi.list(step);
       setCells(res.data || []);
 
+      // Load existing input values from project tables
+      const newInputs = {};
+
+      try {
+        const machineRes = await api.get(`/projects/${projectId}/machine`);
+        if (machineRes.data) {
+          Object.entries(machineRes.data).forEach(([key, val]) => {
+            if (val !== null && val !== undefined && key !== 'id' && key !== 'project_id' && key !== 'created_at') {
+              newInputs[key] = String(val);
+            }
+          });
+        }
+      } catch (e) {}
+
+      try {
+        const stabRes = await api.get(`/projects/${projectId}/stability`);
+        stabRes.data.forEach(p => {
+          if (p.valore !== null) newInputs[p.parametro] = String(p.valore);
+        });
+      } catch (e) {}
+
+      try {
+        const massesRes = await api.get(`/projects/${projectId}/masses`);
+        massesRes.data.forEach((m, i) => {
+          if (m.massa_kg !== null) newInputs[`Q${i + 1}`] = String(m.massa_kg);
+          if (m.braccio_m !== null) newInputs[`T${i + 1}`] = String(m.braccio_m);
+        });
+      } catch (e) {}
+
+      try {
+        const curvesRes = await api.get(`/projects/${projectId}/load-curves`);
+        curvesRes.data.forEach((c, i) => {
+          if (c.carico_kg !== null) newInputs[`R${i + 1}`] = String(c.carico_kg);
+        });
+      } catch (e) {}
+
+      try {
+        const windRes = await api.get(`/projects/${projectId}/wind-areas`);
+        windRes.data.forEach((a, i) => {
+          if (a.valore !== null) newInputs[`V${i + 1}`] = String(a.valore);
+        });
+      } catch (e) {}
+
+      setInputValues(newInputs);
+
       // Load existing results
       const resR = await api.get(`/projects/${projectId}/risultati`);
       for (const r of resR.data) {
@@ -296,10 +341,10 @@ export default function Verifica() {
                                 <td>
                                   {isInput || !isConst ? (
                                     <input type="text"
-                                      defaultValue={c.default_value || ''}
+                                      value={inputValues[c.campo] !== undefined ? inputValues[c.campo] : (c.default_value || '')}
                                       placeholder={isInput ? 'valore input' : '—'}
                                       style={{
-                                        width: 80, padding: '3px 6px', fontSize: 11, fontFamily: 'monospace',
+                                        width: 90, padding: '3px 6px', fontSize: 11, fontFamily: 'monospace',
                                         border: isInput ? '1.5px solid #0070C0' : '1px solid #e5e7eb',
                                         background: '#fff',
                                       }}
