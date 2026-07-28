@@ -29,7 +29,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-#root { min-height: 100vh; display: flex; flex-direction: column; }
+#root { min-height: 100dvh; display: flex; flex-direction: column; }
 
 a { color: var(--dark); text-decoration: none; }
 a:hover { color: var(--yellow); }
@@ -113,7 +113,7 @@ tr:hover td { background: var(--yellow-light); }
 .badge-ok { background: var(--success-bg); color: #166534; }
 .badge-ko { background: var(--error-bg); color: #991b1b; }
 
-.container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 clamp(12px, 3vw, 24px); }
 .page { padding: 28px 0; }
 .page-header { margin-bottom: 28px; }
 .page-header h1 { margin-bottom: 2px; }
@@ -150,15 +150,21 @@ tr:hover td { background: var(--yellow-light); }
 
 @media (max-width: 1024px) {
   .grid-2 { grid-template-columns: 1fr 1fr; }
+  h1 { font-size: clamp(22px, 4vw, 26px); }
 }
 @media (max-width: 768px) {
   .hide-mobile { display: none !important; }
   .mobile-menu-btn { display: block !important; }
   .grid-2 { grid-template-columns: 1fr; }
+  h1 { font-size: clamp(20px, 5vw, 22px); }
+  .page-header h1::after { width: 36px; }
 }
 @media (max-width: 640px) {
-  .container { padding: 0 16px; }
-  .page { padding: 20px 0; }
-  h1 { font-size: 22px; }
-  .card-body { padding: 16px; }
+  .container { padding: 0 clamp(12px, 4vw, 16px); }
+  .page { padding: 16px 0; }
+  .card-body { padding: clamp(12px, 3vw, 16px); }
+  .step-bar { flex-wrap: wrap; }
+  .step-item { flex: 1 1 auto; font-size: 10px; padding: 8px; }
+  th, td { padding: 8px 10px; font-size: 11px; }
+  table { font-size: 12px; }
 }

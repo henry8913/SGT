@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 export default function PageLayout({ title, subtitle, children }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const token = localStorage.getItem('token');
 
   const pages = [
     { to: '/', label: 'Home' },
@@ -31,7 +32,11 @@ export default function PageLayout({ title, subtitle, children }) {
               {p.label}
             </Link>
           ))}
-          <Link to="/login" className="btn btn-dark btn-sm" style={{ color: '#fff', textDecoration: 'none' }}>Accedi</Link>
+          {token ? (
+            <Link to="/dashboard" className="btn btn-dark btn-sm" style={{ color: '#fff', textDecoration: 'none' }}>Dashboard</Link>
+          ) : (
+            <Link to="/login" className="btn btn-dark btn-sm" style={{ color: '#fff', textDecoration: 'none' }}>Accedi</Link>
+          )}
         </div>
         <button onClick={() => setMenuOpen(!menuOpen)} className="mobile-menu-btn"
           style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', display: 'none', color: '#1e1e2e' }}>
@@ -49,7 +54,11 @@ export default function PageLayout({ title, subtitle, children }) {
                 {p.label}
               </Link>
             ))}
-            <Link to="/login" onClick={() => setMenuOpen(false)} style={{ display: 'block', padding: '12px 0', fontWeight: 700, color: '#D4A017', fontSize: 15 }}>Accedi</Link>
+            {token ? (
+              <Link to="/dashboard" onClick={() => setMenuOpen(false)} style={{ display: 'block', padding: '12px 0', fontWeight: 700, color: '#D4A017', fontSize: 15 }}>Dashboard</Link>
+            ) : (
+              <Link to="/login" onClick={() => setMenuOpen(false)} style={{ display: 'block', padding: '12px 0', fontWeight: 700, color: '#D4A017', fontSize: 15 }}>Accedi</Link>
+            )}
           </div>
         </>
       )}

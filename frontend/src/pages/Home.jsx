@@ -12,6 +12,7 @@ const faqs = [
 export default function Home() {
   const [openFaq, setOpenFaq] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const token = localStorage.getItem('token');
 
   const pages = [
     { to: '/', label: 'Home' },
@@ -39,7 +40,11 @@ export default function Home() {
           {pages.map(p => (
             <Link key={p.to} to={p.to} style={{ color: '#6b7280', fontSize: 13, textDecoration: 'none' }}>{p.label}</Link>
           ))}
-          <Link to="/login" className="btn btn-dark btn-sm" style={{ color: '#fff', textDecoration: 'none' }}>Accedi</Link>
+          {token ? (
+            <Link to="/dashboard" className="btn btn-dark btn-sm" style={{ color: '#fff', textDecoration: 'none' }}>Dashboard</Link>
+          ) : (
+            <Link to="/login" className="btn btn-dark btn-sm" style={{ color: '#fff', textDecoration: 'none' }}>Accedi</Link>
+          )}
         </div>
         <button onClick={() => setMenuOpen(!menuOpen)} className="mobile-menu-btn"
           style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', display: 'none', color: '#1e1e2e' }}>
@@ -62,7 +67,11 @@ export default function Home() {
                 {p.label}
               </Link>
             ))}
-            <Link to="/login" onClick={() => setMenuOpen(false)} style={{ display: 'block', padding: '12px 0', fontWeight: 700, color: '#D4A017', fontSize: 15 }}>Accedi</Link>
+            {token ? (
+              <Link to="/dashboard" onClick={() => setMenuOpen(false)} style={{ display: 'block', padding: '12px 0', fontWeight: 700, color: '#D4A017', fontSize: 15 }}>Dashboard</Link>
+            ) : (
+              <Link to="/login" onClick={() => setMenuOpen(false)} style={{ display: 'block', padding: '12px 0', fontWeight: 700, color: '#D4A017', fontSize: 15 }}>Accedi</Link>
+            )}
           </div>
         </>
       )}
