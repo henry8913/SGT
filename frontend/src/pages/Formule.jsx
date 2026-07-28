@@ -1,12 +1,21 @@
 import { useState, useEffect } from 'react';
 import { formulas as formulasApi } from '../api/client';
 
-const SHEET_COLORS = {
-  baricentri: '#e3f2fd', aree_vento: '#fce4ec', vento: '#f3e5f5',
-  stabilita_q: '#e8f5e9', stabilita_d: '#fff3e0', carichi_ralla: '#e0f7fa',
-  curve_carico: '#f1f8e9', diagramma: '#fbe9e7', macchina: '#ede7f6',
-  geometria: '#e0f2f1', masse: '#fce4ec', profili: '#efebe9',
+const STEP_INFO = {
+  baricentri: { label: 'Baricentri', color: '#e3f2fd', ordine: 1 },
+  aree_vento: { label: 'Aree vento', color: '#fce4ec', ordine: 2 },
+  vento: { label: 'Vento', color: '#f3e5f5', ordine: 3 },
+  stabilita_q: { label: 'Stabilità C25-Q', color: '#e8f5e9', ordine: 4 },
+  stabilita_d: { label: 'Stabilità C25-D', color: '#fff3e0', ordine: 5 },
+  curve_carico: { label: 'Curve di carico', color: '#f1f8e9', ordine: 6 },
+  carichi_ralla: { label: 'Carichi ralla', color: '#e0f7fa', ordine: 7 },
+  diagramma: { label: 'Diagramma carico', color: '#fbe9e7', ordine: 8 },
+  macchina: { label: 'Caratteristiche macchina', color: '#ede7f6', ordine: 0 },
+  geometria: { label: 'Geometria braccio', color: '#e0f2f1', ordine: 0 },
+  masse: { label: 'Masse proprie', color: '#fce4ec', ordine: 0 },
+  profili: { label: 'Profili beam', color: '#efebe9', ordine: 0 },
 };
+const SHEET_COLORS = Object.fromEntries(Object.entries(STEP_INFO).map(([k, v]) => [k, v.color]));
 
 export default function Formule() {
   const [allFormulas, setAllFormulas] = useState([]);
@@ -52,8 +61,6 @@ export default function Formule() {
     }
   };
 
-  const steps = [...new Set(allFormulas.map(f => f.step))].sort();
-
   return (
     <div>
       <div className="page-header page-header-accent">
@@ -62,22 +69,41 @@ export default function Formule() {
       </div>
 
       <div className="msg msg-info" style={{ marginBottom: 20 }}>
-        <strong>🔍 Solo visualizzazione.</strong> Le formule vengono importate automaticamente dal file Excel
-        tramite la sezione <strong>Impostazioni → Carica Excel</strong>.
-        {user.is_admin && ' Se noti un errore, correggi direttamente nel file Excel e ricaricalo.'}
+        <strong>🔍 Verifica calcolo.</strong> Seleziona uno step qui sotto per vedere tutte le formule.
+        Confronta con il file Excel originale. Se trovi un errore, correggi l'Excel e carica il file
+        aggiornato da <strong>Impostazioni → Carica Excel</strong>.
       </div>
 
-      <div className="flex gap-3 flex-wrap" style={{ marginBottom: 20 }}>
-        <select value={stepFilter} onChange={e => setStepFilter(e.target.value)} style={{ width: 'auto', minWidth: 200, background: '#fff' }}>
-          <option value="">Tutti gli step</option>
-          {steps.map(s => (
-            <option key={s} value={s}>{s} ({allFormulas.filter(f => f.step === s).length.toLocaleString()})</option>
-          ))}
-        </select>
+      {/* Step pills */}
+      <div className="flex gap-2 flex-wrap" style={{ marginBottom: 16 }}>
+        <button onClick={() => setStepFilter('')} style={{
+          padding: '8px 18px', borderRadius: 999, border: 'none', cursor: 'pointer',
+          fontSize: 13, fontWeight: stepFilter === '' ? 700 : 500,
+          background: stepFilter === '' ? '#1e1e2e' : '#e5e7eb',
+          color: stepFilter === '' ? '#fff' : '#1e1e2e',
+        }}>
+          Tutti
+        </button>
+        {Object.entries(STEP_INFO).sort((a, b) => a[1].ordine - b[1].ordine).map(([key, info]) => (
+          <button key={key} onClick={() => setStepFilter(key)} style={{
+            padding: '8px 18px', borderRadius: 999, border: 'none', cursor: 'pointer',
+            fontSize: 13, fontWeight: stepFilter === key ? 700 : 500,
+            background: stepFilter === key ? '#1e1e2e' : info.color,
+            color: stepFilter === key ? '#fff' : '#1e1e2e',
+          }}>
+            {info.label}
+            <span style={{ marginLeft: 6, fontSize: 11, opacity: 0.7 }}>
+              ({allFormulas.filter(f => f.step === key).length.toLocaleString()})
+            </span>
+          </button>
+        ))}
+      </div>
+
+      <div className="flex gap-3 flex-wrap" style={{ marginBottom: 20, alignItems: 'center' }}>
         <input type="text" value={search} onChange={e => setSearch(e.target.value)}
           placeholder="Cerca formula, cella, label..." style={{ flex: 1, minWidth: 200, background: '#fff' }} />
-        <span style={{ padding: '8px 0', fontSize: 13, color: 'var(--gray)' }}>
-          {filtered.length.toLocaleString()} risultati
+        <span style={{ fontSize: 13, color: 'var(--gray)' }}>
+          {filtered.length.toLocaleString()} formule
         </span>
       </div>
 
