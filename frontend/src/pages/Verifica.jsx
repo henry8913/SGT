@@ -179,19 +179,23 @@ export default function Verifica() {
 
                     {/* Formulas */}
                     <h3 style={{ fontSize: 14, marginBottom: 8, color: '#D4A017' }}>📐 Formule applicate</h3>
-                    <div className="table-wrap" style={{ marginBottom: 20, maxHeight: 300, overflowY: 'auto' }}>
-                      <table style={{ fontSize: 12 }}>
+                    <p style={{ fontSize: 12, color: 'var(--gray)', marginBottom: 8 }}>
+                      {formulas.length} formule — stesse celle e riferimenti dell'Excel originale. Copia-incolla esatto.
+                    </p>
+                    <div className="table-wrap" style={{ marginBottom: 20, maxHeight: 500, overflowY: 'auto' }}>
+                      <table style={{ fontSize: 11 }}>
                         <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
                           <tr>
-                            <th style={{ width: 60 }}>Cella</th>
-                            <th>Formula</th>
-                            {user.is_admin && <th style={{ width: 60 }}>Azioni</th>}
+                            <th style={{ width: 70, fontFamily: 'monospace', color: '#D4A017' }}>Cella</th>
+                            <th>Formula Excel</th>
+                            <th style={{ width: 70 }}>Foglio</th>
+                            {user.is_admin && <th style={{ width: 50 }}>✏</th>}
                           </tr>
                         </thead>
                         <tbody>
-                          {formulas.slice(0, 50).map(f => (
+                          {formulas.map(f => (
                             <tr key={f.id || f.campo}>
-                              <td style={{ fontFamily: 'monospace', fontWeight: 600 }}>{f.campo}</td>
+                              <td style={{ fontFamily: 'monospace', fontWeight: 600, fontSize: 11, color: '#D4A017' }}>{f.campo}</td>
                               <td>
                                 {editId === f.id ? (
                                   <div className="flex gap-2">
@@ -201,9 +205,12 @@ export default function Verifica() {
                                     <button onClick={() => setEditId(null)} className="btn btn-xs btn-ghost">X</button>
                                   </div>
                                 ) : (
-                                  <code style={{ fontSize: 11, wordBreak: 'break-all' }}>{f.formula}</code>
+                                  <code style={{ fontSize: 11, fontFamily: 'monospace', wordBreak: 'break-all' }}>
+                                    ={f.formula}
+                                  </code>
                                 )}
                               </td>
+                              <td style={{ fontSize: 10, color: '#9ca3af' }}>{f.sheet}</td>
                               {user.is_admin && (
                                 <td>
                                   <button onClick={() => { setEditId(f.id); setEditText(f.formula); }}
@@ -212,11 +219,6 @@ export default function Verifica() {
                               )}
                             </tr>
                           ))}
-                          {formulas.length > 50 && (
-                            <tr><td colSpan={3} style={{ textAlign: 'center', color: 'var(--gray)', fontSize: 11, padding: 12 }}>
-                              + {formulas.length - 50} formule (mostrate prime 50)
-                            </td></tr>
-                          )}
                         </tbody>
                       </table>
                     </div>
