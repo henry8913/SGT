@@ -12,7 +12,7 @@ export default function Contatto() {
   return (
     <PageLayout title="Contatto" subtitle="Richiedi informazioni, un preventivo o una demo personalizzata">
       <section style={{ maxWidth: 1000, margin: '0 auto', padding: '60px 24px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 40, alignItems: 'start' }}>
+        <div className="grid-2" style={{ gap: 40, alignItems: 'start' }}>
           {/* Form */}
           <div>
             {sent ? (
