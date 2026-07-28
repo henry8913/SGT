@@ -23,6 +23,7 @@ export default function Layout({ children }) {
     { to: '/', label: 'Home' },
     { to: '/dashboard', label: 'Progetti' },
     { to: '/formule', label: 'Formule' },
+    { to: '/verifica', label: 'Verifica' },
     { to: '/settings/password', label: 'Password' },
     ...(user.is_admin ? [{ to: '/admin/users', label: 'Admin' }] : []),
   ];
