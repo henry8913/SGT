@@ -41,6 +41,7 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(projects.router)
+app.include_router(machine.router)
 app.include_router(geometry.router)
 app.include_router(masses.router)
 app.include_router(wind_areas.router)
