@@ -1,4 +1,5 @@
 import json
+import re
 import tempfile
 import os
 
@@ -12,6 +13,13 @@ from app.models.user import User
 from app.schemas.formulas import FormulaCreate, FormulaResponse, FormulaUpdate
 
 router = APIRouter(prefix="/api/formulas", tags=["formulas"])
+
+
+def _col_to_number(col):
+    n = 0
+    for c in col:
+        n = n * 26 + (ord(c) - ord('A') + 1)
+    return n
 
 
 @router.get("", response_model=list[FormulaResponse])
@@ -122,7 +130,8 @@ def upload_excel(
         return False
 
     extracted = []
-    stats = {"formulas": 0, "inputs": 0, "constants": 0}
+    cell_map = {}
+    stats = {"formulas": 0, "inputs": 0, "constants": 0, "labels": 0}
 
     for sheet_name in wb.sheetnames:
         ws = wb[sheet_name]
@@ -134,46 +143,87 @@ def upload_excel(
                     continue
 
                 cell_text = str(cell.value).strip()
+                cell_ref = cell.coordinate
 
                 if cell_text.startswith("=") and cell_text != "=":
-                    extracted.append({
+                    entry = {
                         "step": step,
                         "sheet": sheet_name,
-                        "campo": cell.coordinate,
+                        "campo": cell_ref,
                         "cell_type": "formula",
                         "formula": cell_text,
                         "default_value": None,
-                        "label": f"{sheet_name}_{cell.coordinate}",
-                    })
+                        "label": "",
+                    }
                     stats["formulas"] += 1
 
                 elif _is_blue(cell):
                     try:
                         val = float(cell.value)
-                        extracted.append({
+                        entry = {
                             "step": step,
                             "sheet": sheet_name,
-                            "campo": cell.coordinate,
+                            "campo": cell_ref,
                             "cell_type": "input",
                             "formula": str(val),
                             "default_value": str(val),
-                            "label": f"{sheet_name}_{cell.coordinate}",
-                        })
+                            "label": "",
+                        }
                         stats["inputs"] += 1
                     except (ValueError, TypeError):
-                        pass
+                        continue
 
                 elif isinstance(cell.value, (int, float)) and not cell_text.startswith("="):
-                    extracted.append({
+                    entry = {
                         "step": step,
                         "sheet": sheet_name,
-                        "campo": cell.coordinate,
+                        "campo": cell_ref,
                         "cell_type": "constant",
                         "formula": str(cell.value),
                         "default_value": str(cell.value),
-                        "label": f"{sheet_name}_{cell.coordinate}",
-                    })
+                        "label": "",
+                    }
                     stats["constants"] += 1
+
+                else:
+                    entry = {
+                        "step": step,
+                        "sheet": sheet_name,
+                        "campo": cell_ref,
+                        "cell_type": "label",
+                        "formula": cell_text,
+                        "default_value": cell_text,
+                        "label": cell_text,
+                    }
+                    stats["labels"] += 1
+
+                extracted.append(entry)
+                key = (sheet_name, cell.row, cell.column)
+                cell_map[key] = entry
+
+    for entry in extracted:
+        if entry["cell_type"] in ("input", "formula", "constant") and not entry["label"]:
+            sheet = entry["sheet"]
+            match = re.match(r'([A-Z]+)(\d+)', entry["campo"])
+            if match:
+                col_letters = match.group(1)
+                row_num = int(match.group(2))
+                col_num = _col_to_number(col_letters)
+                for c in range(col_num - 1, 0, -1):
+                    key = (sheet, row_num, c)
+                    if key in cell_map:
+                        neighbor = cell_map[key]
+                        if neighbor["cell_type"] == "label":
+                            entry["label"] = neighbor["label"]
+                            break
+                if not entry["label"]:
+                    for r in range(row_num - 1, max(0, row_num - 10), -1):
+                        key = (sheet, r, col_num)
+                        if key in cell_map:
+                            neighbor = cell_map[key]
+                            if neighbor["cell_type"] == "label":
+                                entry["label"] = neighbor["label"]
+                                break
 
     db.query(Formula).delete()
     db.commit()
@@ -194,6 +244,7 @@ def upload_excel(
         "formulas": stats["formulas"],
         "inputs": stats["inputs"],
         "constants": stats["constants"],
+        "labels": stats["labels"],
         "sheets": len(wb.sheetnames),
-        "message": f"Importate {stats['formulas']} formule, {stats['inputs']} input, {stats['constants']} costanti da {len(wb.sheetnames)} fogli",
+        "message": f"Importate {stats['formulas']} formule, {stats['inputs']} input, {stats['constants']} costanti, {stats['labels']} etichette da {len(wb.sheetnames)} fogli",
     }
