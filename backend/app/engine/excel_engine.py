@@ -72,6 +72,10 @@ INPUT_SHEETS = {
 }
 
 
+def _normalize_formula(formula: str) -> str:
+    return formula.replace("_xlfn.FORECAST.LINEAR", "FORECAST").replace("_xlfn.FLOOR.MATH", "FLOOR")
+
+
 def build_xlsx_from_db(project_id: int, db: Session) -> str:
     """Build a temporary .xlsx file from database formulas and input values.
 
@@ -90,7 +94,7 @@ def build_xlsx_from_db(project_id: int, db: Session) -> str:
     for f in all_db_formulas:
         if f.sheet not in by_sheet:
             by_sheet[f.sheet] = {}
-        by_sheet[f.sheet][f.campo] = f.formula
+        by_sheet[f.sheet][f.campo] = _normalize_formula(f.formula)
 
     for sheet_name in SHEET_ORDER:
         if sheet_name not in by_sheet:
