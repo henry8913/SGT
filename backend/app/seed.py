@@ -87,8 +87,33 @@ def seed_database():
         db.commit()
         print(f"Inserted {len(sample_profiles)} beam profiles")
 
+    _precalc_default_results(db)
     db.close()
     print("Database seeded successfully!")
+
+
+def _precalc_default_results(db):
+    import os
+    json_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "default_results.json")
+    from app.models.project import Project
+    from app.models.results import Result
+    from app.engine.calculator import Calculator
+
+    tmpl = db.query(Project).filter(Project.id == 9999).first()
+    if not tmpl:
+        tmpl = Project(id=9999, name="__template__", user_id=1)
+        db.add(tmpl)
+        db.commit()
+
+    calc = Calculator(9999, db)
+    calc.run_all()
+    saved = db.query(Result).filter(Result.project_id == 9999).all()
+    out = {}
+    for r in saved:
+        out[r.step] = r.dati
+    with open(json_path, "w") as f:
+        json.dump(out, f)
+    print(f"Default results saved ({len(out)} steps)")
 
 
 if __name__ == "__main__":

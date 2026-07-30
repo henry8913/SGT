@@ -29,7 +29,27 @@ def create_project(
     db.add(project)
     db.commit()
     db.refresh(project)
+
+    _copy_default_results(project.id, db)
     return project
+
+
+def _copy_default_results(project_id: int, db: Session):
+    import json, os
+    json_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "default_results.json")
+    if not os.path.exists(json_path):
+        return
+    from app.models.results import Result
+    with open(json_path) as f:
+        default_results = json.load(f)
+    for step, dati in default_results.items():
+        existing = db.query(Result).filter(
+            Result.project_id == project_id, Result.step == step
+        ).first()
+        if not existing:
+            r = Result(project_id=project_id, step=step, dati=dati)
+            db.add(r)
+    db.commit()
 
 
 @router.get("/{project_id}", response_model=ProjectResponse)

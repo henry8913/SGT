@@ -25,27 +25,13 @@ from app.models.wind_areas import WindArea
 from app.models.beam_profile import BeamProfile
 
 
-_calc_cache: dict[int, formulas.ExcelModel] = {}
+_cached_model: formulas.ExcelModel | None = None
+_sheet_name_map: dict[str, str] = {}
 
 
 def invalidate_calc_cache(project_id: int = None):
-    if project_id is not None:
-        _calc_cache.pop(project_id, None)
-    else:
-        _calc_cache.clear()
-
-
-_sheet_name_map = {s.upper(): s for s in SHEET_ORDER}
-
-
-def _extract_cell_ref(ks: str):
-    m = re.match(r"\'.*?\](\w+)\'!\$?([A-Z]+)(\d+)", ks)
-    if not m:
-        return None, None, None
-    up_sheet = m.group(1)
-    cell_ref = m.group(2) + m.group(3)
-    sheet_canon = _sheet_name_map.get(up_sheet)
-    return sheet_canon, cell_ref, ks
+    global _cached_model
+    _cached_model = None
 
 
 def _get_dsp_inputs(project_id: int, db: Session) -> dict:
@@ -136,6 +122,8 @@ STEP_MAP = {
     "Diagramma di carico": "diagramma",
     "Elenchi a discesa": "dropdown",
 }
+
+_sheet_name_map.update({s.upper(): s for s in SHEET_ORDER})
 
 
 INPUT_SHEETS = {
@@ -268,19 +256,20 @@ def _load_input_values(project_id: int, db: Session) -> dict[tuple[str, str], fl
 def run_engine(project_id: int, db: Session) -> dict[str, Any]:
     sheet_name_map = {s.upper(): s for s in SHEET_ORDER}
 
-    if project_id not in _calc_cache:
+    global _cached_model
+    if _cached_model is None:
         xlsx_path = build_xlsx_from_db(project_id, db)
         try:
             xl_model = formulas.ExcelModel()
             xl_model.loads(xlsx_path)
-            _calc_cache[project_id] = xl_model
+            _cached_model = xl_model
         finally:
             try:
                 os.remove(xlsx_path)
             except Exception:
                 pass
 
-    xl_model = _calc_cache[project_id]
+    xl_model = _cached_model
     dsp = xl_model.dsp
     input_cells = _get_dsp_inputs(project_id, db)
 
