@@ -101,8 +101,37 @@ def _precalc_default_results(db):
 
     tmpl = db.query(Project).filter(Project.id == 9999).first()
     if not tmpl:
-        tmpl = Project(id=9999, name="__template__", user_id=1)
+        tmpl = Project(id=9999, name="GRU C25 - Modello di default", notes="Progetto template con tutti i dati pre-caricati. Apri e usa subito in Verifica o procedi con il wizard.", user_id=1)
         db.add(tmpl)
+        db.commit()
+    else:
+        tmpl.name = "GRU C25 - Modello di default"
+        tmpl.notes = "Progetto template con tutti i dati pre-caricati. Apri e usa subito in Verifica o procedi con il wizard."
+        db.commit()
+
+    from app.models.load_curves import LoadCurve
+    from app.models.masses import Mass
+    from app.models.machine import MachineCharacteristics
+
+    if db.query(MachineCharacteristics).filter(MachineCharacteristics.project_id == 9999).count() == 0:
+        db.add(MachineCharacteristics(
+            project_id=9999, sbraccio_max=65, carico_punta_tiro2=1800, carico_punta_tiro24=1800,
+            carico_max_tiro2=10000, escursione_carrello_tiro2=16, carico_max_tiro24=10000,
+            escursione_carrello_tiro24=16, altezza_max=70, diametro_funi_sollevamento=16, diametro_fune_carrello=7,
+        ))
+        db.commit()
+    if db.query(LoadCurve).filter(LoadCurve.project_id == 9999).count() == 0:
+        for i, r in enumerate(range(5, 66, 5)):
+            db.add(LoadCurve(project_id=9999, tipo="II", raggio_m=r, carico_kg=10000 - (i * 1200)))
+            db.add(LoadCurve(project_id=9999, tipo="II IV", raggio_m=r, carico_kg=10000 - (i * 1200)))
+        db.commit()
+    if db.query(Mass).filter(Mass.project_id == 9999).count() == 0:
+        masses_data = [
+            ("Braccio principale", 2221, 3.5), ("Prolunga", 1630, 8.5), ("Verricello", 1365, 13.5),
+            ("Carrello", 1119, 18.5), ("Funi", 984, 23.5), ("Gancio", 820, 28.5),
+        ]
+        for nome, massa, braccio in masses_data:
+            db.add(Mass(project_id=9999, componente=nome, massa_kg=massa, braccio_m=braccio, utilizzato=True))
         db.commit()
 
     calc = Calculator(9999, db)

@@ -286,13 +286,17 @@ def run_engine(project_id: int, db: Session) -> dict[str, Any]:
     sheet_values: dict[str, dict[str, float | str]] = {}
     for key, val in solution.items():
         ks = str(key)
-        m = re.match(r"\'.*?\](\w+)\'!\$?([A-Z]+)(\d+)", ks)
-        if not m:
-            continue
-        up_sheet = m.group(1)
-        cell_ref = m.group(2) + m.group(3)
-        sheet_canon = sheet_name_map.get(up_sheet)
-        if not sheet_canon:
+        try:
+            sheet_part = ks.split("]")[1].split("'!")[0]
+            cell_part = ks.split("'!")[1].lstrip("$")
+            m = re.match(r"([A-Z]+)(\d+)", cell_part)
+            if not m: continue
+            up_sheet = sheet_part.upper()
+            cell_ref = m.group(1) + m.group(2)
+            sheet_canon = sheet_name_map.get(up_sheet)
+            if not sheet_canon:
+                continue
+        except (IndexError, AttributeError):
             continue
         try:
             raw = val.value if hasattr(val, 'value') else val
@@ -309,10 +313,14 @@ def run_engine(project_id: int, db: Session) -> dict[str, Any]:
         if not values:
             continue
         step_key = STEP_MAP.get(sheet_name, "altro")
-        formatted[step_key] = {
-            "sheet": sheet_name,
-            "cells": len(values),
-            "values": values,
-        }
+        if step_key in formatted:
+            formatted[step_key]["values"].update(values)
+            formatted[step_key]["cells"] = len(formatted[step_key]["values"])
+        else:
+            formatted[step_key] = {
+                "sheet": sheet_name,
+                "cells": len(values),
+                "values": values,
+            }
 
     return formatted
