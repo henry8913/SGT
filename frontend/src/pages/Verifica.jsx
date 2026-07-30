@@ -165,6 +165,55 @@ export default function Verifica() {
           }
         }
       }
+      if (stepKey === 'masse') {
+        const massesData = [];
+        cells.forEach(c => {
+          if (inputValues[c.campo]) {
+            const idx = parseInt(c.campo.match(/\d+/)?.[0] || '1') - 1;
+            if (!massesData[idx]) massesData[idx] = {};
+            if (c.campo.startsWith('Q')) massesData[idx].massa_kg = parseFloat(inputValues[c.campo]) || 0;
+            if (c.campo.startsWith('T')) massesData[idx].braccio_m = parseFloat(inputValues[c.campo]) || 0;
+          }
+        });
+        for (let i = 0; i < massesData.length; i++) {
+          if (massesData[i]) {
+            try {
+              const existing = await api.get(`/projects/${selectedProject}/masses`);
+              if (existing.data[i]) {
+                await api.put(`/projects/${selectedProject}/masses/${existing.data[i].id}`, massesData[i]);
+              } else {
+                await api.post(`/projects/${selectedProject}/masses`, massesData[i]);
+              }
+            } catch (e) {
+              await api.post(`/projects/${selectedProject}/masses`, massesData[i]);
+            }
+          }
+        }
+      }
+      if (stepKey === 'curve_carico') {
+        const curvesData = [];
+        cells.forEach(c => {
+          if (inputValues[c.campo] && c.campo.startsWith('R')) {
+            const idx = parseInt(c.campo.match(/\d+/)?.[0] || '1') - 1;
+            if (!curvesData[idx]) curvesData[idx] = {};
+            curvesData[idx].carico_kg = parseFloat(inputValues[c.campo]) || 0;
+          }
+        });
+        for (let i = 0; i < curvesData.length; i++) {
+          if (curvesData[i]) {
+            try {
+              const existing = await api.get(`/projects/${selectedProject}/load-curves`);
+              if (existing.data[i]) {
+                await api.put(`/projects/${selectedProject}/load-curves/${existing.data[i].id}`, curvesData[i]);
+              } else {
+                await api.post(`/projects/${selectedProject}/load-curves`, curvesData[i]);
+              }
+            } catch (e) {
+              await api.post(`/projects/${selectedProject}/load-curves`, curvesData[i]);
+            }
+          }
+        }
+      }
 
       await api.post(`/projects/${selectedProject}/calcola`);
       const resR = await api.get(`/projects/${selectedProject}/risultati`);
