@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import api from '../../api/client';
 
-export default function ExcelUpload() {
+export default function ExcelUpload({ onUploadComplete }) {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -19,6 +19,7 @@ export default function ExcelUpload() {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setResult(res.data);
+      if (onUploadComplete) onUploadComplete();
     } catch (err) {
       const status = err.response?.status;
       const detail = err.response?.data?.detail || err.response?.data?.message || err.message;
@@ -43,7 +44,7 @@ export default function ExcelUpload() {
 
       {result && (
         <div style={{ background: '#e8f5e9', color: '#2e7d32', padding: 12, borderRadius: 4, marginBottom: 16, fontSize: 13 }}>
-          ✅ Importate <strong>{result.formule_importate?.toLocaleString()}</strong> formule da {result.sheets} fogli.
+          ✅ {result.message}
         </div>
       )}
 
