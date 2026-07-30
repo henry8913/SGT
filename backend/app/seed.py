@@ -112,6 +112,8 @@ def _precalc_default_results(db):
     from app.models.load_curves import LoadCurve
     from app.models.masses import Mass
     from app.models.machine import MachineCharacteristics
+    from app.models.stability import StabilityParam
+    from app.models.wind_areas import WindArea
 
     if db.query(MachineCharacteristics).filter(MachineCharacteristics.project_id == 9999).count() == 0:
         db.add(MachineCharacteristics(
@@ -120,6 +122,24 @@ def _precalc_default_results(db):
             escursione_carrello_tiro24=16, altezza_max=70, diametro_funi_sollevamento=16, diametro_fune_carrello=7,
         ))
         db.commit()
+    if db.query(StabilityParam).filter(StabilityParam.project_id == 9999).count() == 0:
+        stab_defaults = [
+            ("J38", 2.0, "Distanza ralla-piastra"), ("J39", 0.8, "Coeff. attrito"),
+            ("J40", 1.2, "Coeff. sicurezza"), ("J30", 1.5, "Coeff. stabilità minimo"),
+            ("J35", 0.9, "Coeff. vento"), ("J37", 1.1, "Coeff. carico"),
+            ("R11", 4.5, "Interasse carro"), ("M3", 4.5, "Interasse carro base"),
+            ("M5", 1.0, "Sbraccio minimo"), ("M7", 0.5, "Sbraccio max"),
+            ("J329", 1.0, "Coeff. correttivo"),
+        ]
+        for param, val, label in stab_defaults:
+            db.add(StabilityParam(project_id=9999, parametro=param, valore=val, descrizione=label))
+        db.commit()
+    if db.query(WindArea).filter(WindArea.project_id == 9999).count() == 0:
+        for parte in ["b", "rc", "cb", "Pu"]:
+            for i in range(1, 6):
+                db.add(WindArea(project_id=9999, parte=parte, parametro=f"V{i}", valore=1.0 + (i * 0.2), coordinata_x=0.0, coordinata_y=0.0))
+        db.commit()
+
     if db.query(LoadCurve).filter(LoadCurve.project_id == 9999).count() == 0:
         for i, r in enumerate(range(5, 66, 5)):
             db.add(LoadCurve(project_id=9999, tipo="II", raggio_m=r, carico_kg=10000 - (i * 1200)))
