@@ -343,9 +343,8 @@ export default function Verifica() {
                           <th style={{ width: 36 }}>T</th>
                           <th style={{ minWidth: 260 }}>Etichetta</th>
                           <th style={{ minWidth: 90 }}>Valore / Input</th>
-                          <th>Dettaglio</th>
+                          <th style={{ minWidth: 120 }}>Dettaglio {user.is_admin && <span style={{ fontWeight: 400, fontSize: 9, color: '#9ca3af' }}>(clicca formula per modificare)</span>}</th>
                           <th style={{ width: 90 }}>Risultato</th>
-                          {user.is_admin && <th style={{ width: 30 }}>✏</th>}
                         </tr>
                       </thead>
                       <tbody>
@@ -354,8 +353,8 @@ export default function Verifica() {
                           const valueCells = rowCells.filter(c => c.cell_type !== 'label');
 
                           return valueCells.map((c, ci) => {
-                            const isInput = c.cell_type === 'input';
-                            const isConst = c.cell_type === 'constant';
+                            const isInput = c.cell_type === 'input' || c.cell_type === 'constant';
+                            const isFormula = c.cell_type === 'formula';
                             const calcVal = resultsValues?.[c.campo];
                             const isEditing = editId === c.id;
                             const rowLabel = c.label || (labelCells.length > 0 ? labelCells.map(l => l.default_value || l.formula).join(' ').trim() : '');
@@ -364,7 +363,7 @@ export default function Verifica() {
                             return (
                             <tr key={c.id || c.campo}
                               style={{
-                                background: isInput ? '#E3F0FF' : isConst ? '#fafafa' : '#fff',
+                                background: isInput ? '#E3F0FF' : '#fff',
                                 borderBottom: '1px solid #eef2f6',
                               }}>
                               <td style={{ color: '#9ca3af', fontSize: 10, fontFamily: 'monospace', textAlign: 'center' }}>
@@ -376,8 +375,6 @@ export default function Verifica() {
                               <td>
                                 {isInput ? (
                                   <span style={{ display: 'inline-block', padding: '1px 3px', borderRadius: 2, fontSize: 8, fontWeight: 700, background: '#0070C0', color: '#fff' }}>IN</span>
-                                ) : isConst ? (
-                                  <span style={{ display: 'inline-block', padding: '1px 3px', borderRadius: 2, fontSize: 8, fontWeight: 700, background: '#e5e7eb', color: '#6b7280', border: '1px solid #d1d5db' }}>CO</span>
                                 ) : (
                                   <span style={{ display: 'inline-block', padding: '1px 3px', borderRadius: 2, fontSize: 8, fontWeight: 700, border: '1.5px solid #1e1e2e' }}>FX</span>
                                 )}
@@ -399,10 +396,6 @@ export default function Verifica() {
                                       setInputValues(prev => ({...prev, [c.campo]: v}));
                                       triggerAutoCalc();
                                     }} />
-                                ) : isConst ? (
-                                  <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 600, color: '#6b7280', padding: '4px 0' }}>
-                                    {c.default_value || c.formula}
-                                  </span>
                                 ) : (
                                   <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 500, color: '#6b7280', padding: '4px 0' }}>
                                     {c.formula}
@@ -418,8 +411,13 @@ export default function Verifica() {
                                     <button onClick={() => setEditId(null)} className="btn btn-xs btn-ghost">X</button>
                                   </div>
                                 ) : (
-                                  <code style={{ fontSize: 10, fontFamily: 'monospace', color: isConst || isInput ? '#6b7280' : '#1e1e2e', wordBreak: 'break-all' }}>
-                                    {isConst || isInput ? (c.default_value || c.formula) : c.formula}
+                                  <code onClick={() => { if (user.is_admin && isFormula) { setEditId(c.id); setEditText(c.formula); } }}
+                                    style={{
+                                      fontSize: 10, fontFamily: 'monospace', color: '#1e1e2e', wordBreak: 'break-all',
+                                      cursor: user.is_admin && isFormula ? 'pointer' : 'default',
+                                      textDecoration: user.is_admin && isFormula ? 'underline dotted #9ca3af' : 'none',
+                                    }}>
+                                    {c.formula}
                                   </code>
                                 )}
                               </td>
@@ -427,10 +425,6 @@ export default function Verifica() {
                                 {isInput ? (
                                   <span style={{ color: '#0070C0' }}>
                                     {inputValues[c.campo] !== undefined ? inputValues[c.campo] : (c.default_value || '')}
-                                  </span>
-                                ) : isConst ? (
-                                  <span style={{ color: '#1e1e2e' }}>
-                                    {c.default_value || c.formula}
                                   </span>
                                 ) : calcVal !== undefined ? (
                                   <span style={{ color: '#1e1e2e' }} title={`Formula: ${c.formula}`}>
@@ -441,14 +435,6 @@ export default function Verifica() {
                                   <span style={{ color: '#d1d5db' }}>—</span>
                                 )}
                               </td>
-                              {user.is_admin && (
-                                <td>
-                                  {!isConst && (
-                                    <button onClick={() => { setEditId(c.id); setEditText(c.formula); }}
-                                      className="btn btn-xs btn-ghost" style={{ padding: '1px 4px', fontSize: 10 }}>✏</button>
-                                  )}
-                                </td>
-                              )}
                             </tr>
                           );});
                         })}

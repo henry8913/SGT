@@ -105,7 +105,7 @@ def extract_all(xlsx_path):
                         "step": step,
                         "sheet": sheet_name,
                         "campo": cell_ref,
-                        "cell_type": "constant",
+                        "cell_type": "input",
                         "formula": str(cell.value),
                         "default_value": str(cell.value),
                         "label": "",

@@ -3,18 +3,24 @@ import api, { formulas as formulasApi } from '../../api/client';
 import ExcelUpload from './ExcelUpload';
 
 export default function SettingsProfili() {
+  const [profiles, setProfiles] = useState([]);
   const [cells, setCells] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showRaw, setShowRaw] = useState(false);
 
   useEffect(() => {
-    loadCells();
+    loadData();
   }, []);
 
-  const loadCells = async () => {
+  const loadData = async () => {
     setLoading(true);
     try {
-      const res = await formulasApi.list({ step: 'profili' });
-      setCells(res.data || []);
+      const [profRes, cellsRes] = await Promise.all([
+        api.get('/profiles'),
+        formulasApi.list({ step: 'profili' }),
+      ]);
+      setProfiles(profRes.data || []);
+      setCells(cellsRes.data || []);
     } catch (err) {
       console.error(err);
     }
@@ -43,22 +49,61 @@ export default function SettingsProfili() {
       <h2 style={{ marginBottom: 16 }}>Impostazioni</h2>
 
       <div style={{ marginBottom: 24 }}>
-        <ExcelUpload onUploadComplete={loadCells} />
+        <ExcelUpload onUploadComplete={loadData} />
       </div>
 
       <h3 style={{ marginBottom: 12 }}>Libreria Profili</h3>
       <p style={{ color: '#666', marginBottom: 16, fontSize: 14 }}>
-        Dati estratti dal foglio <strong>Proprietà_beam</strong> dell'Excel.
+        Profili strutturali dal foglio Excel <strong>Proprietà_beam</strong>.
         Per aggiornare, carica il file Excel aggiornato sopra.
       </p>
 
       {loading ? (
         <div className="card" style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>Caricamento...</div>
-      ) : cells.length === 0 ? (
+      ) : profiles.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: 40, color: 'var(--gray)', fontSize: 13 }}>
-          Nessun dato. Carica un file Excel con il foglio Proprietà_beam.
+          Nessun profilo nel catalogo. Carica un Excel con il foglio Proprietà_beam.
         </div>
       ) : (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <thead>
+              <tr style={{ background: '#f5f5f5' }}>
+                <th style={{ padding: 8, border: '1px solid #ddd', textAlign: 'left' }}>Profilo</th>
+                <th style={{ padding: 8, border: '1px solid #ddd' }}>Area (mm²)</th>
+                <th style={{ padding: 8, border: '1px solid #ddd' }}>IY (mm⁴)</th>
+                <th style={{ padding: 8, border: '1px solid #ddd' }}>IZ (mm⁴)</th>
+                <th style={{ padding: 8, border: '1px solid #ddd' }}>HY (mm³)</th>
+                <th style={{ padding: 8, border: '1px solid #ddd' }}>BZ (mm³)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {profiles.map(p => (
+                <tr key={p.id}>
+                  <td style={{ padding: 8, border: '1px solid #ddd', fontWeight: 600 }}>{p.nome}</td>
+                  <td style={{ padding: 8, border: '1px solid #ddd' }}>{p.area_mm2?.toLocaleString()}</td>
+                  <td style={{ padding: 8, border: '1px solid #ddd' }}>{p.iy_mm4?.toLocaleString()}</td>
+                  <td style={{ padding: 8, border: '1px solid #ddd' }}>{p.iz_mm4?.toLocaleString()}</td>
+                  <td style={{ padding: 8, border: '1px solid #ddd' }}>{p.hy_mm3?.toLocaleString()}</td>
+                  <td style={{ padding: 8, border: '1px solid #ddd' }}>{p.bz_mm3?.toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <div style={{ marginBottom: 16 }}>
+        <button onClick={() => setShowRaw(!showRaw)}
+          style={{
+            background: 'none', border: '1px solid #d1d5db', borderRadius: 4, padding: '6px 14px',
+            cursor: 'pointer', fontSize: 12, color: '#374151',
+          }}>
+          {showRaw ? 'Nascondi' : 'Mostra'} celle raw da Proprietà_beam ({cells.length} celle)
+        </button>
+      </div>
+
+      {showRaw && cells.length > 0 && (
         <div className="card">
           <div className="table-wrap" style={{ maxHeight: 550, overflowY: 'auto' }}>
             <table style={{ fontSize: 11 }}>
@@ -78,17 +123,13 @@ export default function SettingsProfili() {
                   const valueCells = rowCells.filter(c => c.cell_type !== 'label');
 
                   return valueCells.map((c, ci) => {
-                    const isInput = c.cell_type === 'input';
-                    const isConst = c.cell_type === 'constant';
+                    const isInput = c.cell_type === 'input' || c.cell_type === 'constant';
                     const rowLabel = c.label || (labelCells.length > 0 ? labelCells.map(l => l.default_value || l.formula).join(' ').trim() : '');
                     const showRowNum = ci === 0;
 
                     return (
                     <tr key={c.id || c.campo}
-                      style={{
-                        background: isInput ? '#E3F0FF' : isConst ? '#fafafa' : '#fff',
-                        borderBottom: '1px solid #eef2f6',
-                      }}>
+                      style={{ background: isInput ? '#E3F0FF' : '#fff', borderBottom: '1px solid #eef2f6' }}>
                       <td style={{ color: '#9ca3af', fontSize: 10, fontFamily: 'monospace', textAlign: 'center' }}>
                         {showRowNum && <span>{rowNum}</span>}
                       </td>
@@ -98,8 +139,6 @@ export default function SettingsProfili() {
                       <td>
                         {isInput ? (
                           <span style={{ display: 'inline-block', padding: '1px 3px', borderRadius: 2, fontSize: 8, fontWeight: 700, background: '#0070C0', color: '#fff' }}>IN</span>
-                        ) : isConst ? (
-                          <span style={{ display: 'inline-block', padding: '1px 3px', borderRadius: 2, fontSize: 8, fontWeight: 700, background: '#e5e7eb', color: '#6b7280', border: '1px solid #d1d5db' }}>CO</span>
                         ) : (
                           <span style={{ display: 'inline-block', padding: '1px 3px', borderRadius: 2, fontSize: 8, fontWeight: 700, border: '1.5px solid #1e1e2e' }}>FX</span>
                         )}
@@ -108,19 +147,13 @@ export default function SettingsProfili() {
                         {rowLabel || c.campo}
                       </td>
                       <td>
-                        {isConst || isInput ? (
-                          <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 600, color: isInput ? '#0070C0' : '#6b7280' }}>
-                            {c.default_value || c.formula}
-                          </span>
-                        ) : (
-                          <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 500, color: '#6b7280' }}>
-                            {c.formula}
-                          </span>
-                        )}
+                        <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 600, color: isInput ? '#0070C0' : '#6b7280', padding: '4px 0' }}>
+                          {c.default_value || c.formula}
+                        </span>
                       </td>
                       <td>
-                        <code style={{ fontSize: 10, fontFamily: 'monospace', color: isConst || isInput ? '#6b7280' : '#1e1e2e', wordBreak: 'break-all' }}>
-                          {isConst || isInput ? (c.default_value || c.formula) : c.formula}
+                        <code style={{ fontSize: 10, fontFamily: 'monospace', color: isInput ? '#6b7280' : '#1e1e2e', wordBreak: 'break-all' }}>
+                          {c.formula}
                         </code>
                       </td>
                     </tr>
@@ -128,9 +161,6 @@ export default function SettingsProfili() {
                 })}
               </tbody>
             </table>
-          </div>
-          <div style={{ padding: '8px 12px', borderTop: '1px solid #e5e7eb', fontSize: 11, color: '#9ca3af' }}>
-            {cells.length} celle totali dal foglio Proprietà_beam
           </div>
         </div>
       )}

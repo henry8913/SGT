@@ -133,7 +133,7 @@ def upload_excel(
 
     extracted = []
     cell_map = {}
-    stats = {"formulas": 0, "inputs": 0, "constants": 0, "labels": 0}
+    stats = {"formulas": 0, "inputs": 0, "labels": 0}
 
     for sheet_name in wb.sheetnames:
         ws = wb[sheet_name]
@@ -180,12 +180,12 @@ def upload_excel(
                         "step": step,
                         "sheet": sheet_name,
                         "campo": cell_ref,
-                        "cell_type": "constant",
+                        "cell_type": "input",
                         "formula": str(cell.value),
                         "default_value": str(cell.value),
                         "label": "",
                     }
-                    stats["constants"] += 1
+                    stats["inputs"] += 1
 
                 else:
                     entry = {
@@ -245,8 +245,7 @@ def upload_excel(
         "total": total,
         "formulas": stats["formulas"],
         "inputs": stats["inputs"],
-        "constants": stats["constants"],
         "labels": stats["labels"],
         "sheets": len(wb.sheetnames),
-        "message": f"Importate {stats['formulas']} formule, {stats['inputs']} input, {stats['constants']} costanti, {stats['labels']} etichette da {len(wb.sheetnames)} fogli",
+        "message": f"Importate {stats['formulas']} formule, {stats['inputs']} input, {stats['labels']} etichette da {len(wb.sheetnames)} fogli",
     }
