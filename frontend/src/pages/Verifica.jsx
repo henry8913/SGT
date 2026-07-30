@@ -384,14 +384,14 @@ export default function Verifica() {
                                       width: '100%', minWidth: 80, maxWidth: 140, padding: '3px 6px', fontSize: 12, fontFamily: 'monospace', fontWeight: 600,
                                       border: '2px solid #0070C0', borderRadius: 4, background: '#F0F7FF', color: '#0070C0', boxSizing: 'border-box',
                                     }}
-                                    onChange={e => setInputValues({...inputValues, [c.campo]: e.target.value})} />
+                                    onChange={e => { const v = e.target.value; setInputValues({...inputValues, [c.campo]: v}); }} />
                                 ) : isConst ? (
                                   <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 600, color: '#6b7280', padding: '4px 0' }}>
                                     {c.default_value || c.formula}
                                   </span>
                                 ) : (
-                                  <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 600, color: calcVal !== undefined ? '#1a7d36' : '#d1d5db' }}>
-                                    {c.default_value || '—'}
+                                  <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 500, color: '#6b7280', padding: '4px 0' }}>
+                                    {c.formula}
                                   </span>
                                 )}
                               </td>
@@ -409,13 +409,23 @@ export default function Verifica() {
                                   </code>
                                 )}
                               </td>
-                              <td style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 12, color: calcVal !== undefined ? (isInput ? '#0070C0' : '#1a7d36') : '#d1d5db' }}>
-                                {calcVal !== undefined ? (
-                                  <span title={c.cell_type === 'formula' ? `Formula: ${c.formula}` : ''}>
-                                    {c.cell_type === 'formula' && <span style={{ fontSize: 9, opacity: 0.5, marginRight: 2 }}>ƒx</span>}
+                              <td style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 12 }}>
+                                {isInput ? (
+                                  <span style={{ color: '#0070C0' }}>
+                                    {inputValues[c.campo] !== undefined ? inputValues[c.campo] : (c.default_value || '')}
+                                  </span>
+                                ) : isConst ? (
+                                  <span style={{ color: '#1e1e2e' }}>
+                                    {c.default_value || c.formula}
+                                  </span>
+                                ) : calcVal !== undefined ? (
+                                  <span style={{ color: '#1e1e2e' }} title={`Formula: ${c.formula}`}>
+                                    <span style={{ fontSize: 9, opacity: 0.5, marginRight: 2 }}>ƒx</span>
                                     {typeof calcVal === 'number' ? calcVal.toLocaleString() : calcVal}
                                   </span>
-                                ) : '—'}
+                                ) : (
+                                  <span style={{ color: '#d1d5db' }}>—</span>
+                                )}
                               </td>
                               {user.is_admin && (
                                 <td>
