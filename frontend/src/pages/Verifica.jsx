@@ -98,7 +98,6 @@ export default function Verifica() {
 
       const resR = await api.get(`/projects/${projectId}/risultati`);
       for (const r of resR.data) { if (r.step === sd.key) setResults(typeof r.dati === 'string' ? JSON.parse(r.dati) : r.dati); }
-      setTimeout(() => recalculate(projectId, sd.key), 100);
     } catch (err) { console.error(err); }
     setLoading(false);
   }, []);
