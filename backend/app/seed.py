@@ -39,7 +39,7 @@ def seed_database():
 
     if db.query(Formula).count() == 0:
         import os
-        json_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "formulas_seed.json")
+        json_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "formulas_seed.json")
         if os.path.exists(json_path):
             with open(json_path) as f:
                 all_formulas_data = json.load(f)
