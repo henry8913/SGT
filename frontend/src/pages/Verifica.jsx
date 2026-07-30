@@ -273,8 +273,12 @@ export default function Verifica() {
                       const calcVal = resultsValues[c.campo];
                       const isEditing = editId === c.id;
                       return (
-                      <tr key={c.id || c.campo} style={{ background: isInput ? '#eef7ff' : isConst ? '#fafafa' : '#fff' }}>
-                        <td style={{ fontFamily: 'monospace', fontWeight: 600, fontSize: 11, color: isInput ? '#0070C0' : isConst ? '#6b7280' : '#1e1e2e' }}>
+                      <tr key={c.id || c.campo} style={{ background: isInput ? '#E3F0FF' : isConst ? '#fafafa' : '#fff' }}>
+                        <td style={{
+                          fontFamily: 'monospace', fontWeight: 600, fontSize: 11,
+                          color: isInput ? '#0070C0' : isConst ? '#6b7280' : '#1e1e2e',
+                          borderLeft: isInput ? '3px solid #0070C0' : '3px solid transparent',
+                        }}>
                           {c.campo}
                         </td>
                         <td>
@@ -294,8 +298,9 @@ export default function Verifica() {
                               placeholder={isInput ? 'input' : '—'}
                               style={{
                                 width: '100%', minWidth: 70, padding: '3px 6px', fontSize: 11, fontFamily: 'monospace',
-                                border: isInput ? '1.5px solid #0070C0' : '1px solid #e5e7eb',
-                                background: '#fff', boxSizing: 'border-box',
+                                border: isInput ? '2px solid #0070C0' : '1px solid #e5e7eb',
+                                background: isInput ? '#F0F7FF' : '#fff',
+                                boxSizing: 'border-box',
                               }}
                               onChange={e => setInputValues({...inputValues, [c.campo]: e.target.value})} />
                           ) : (
@@ -318,9 +323,14 @@ export default function Verifica() {
                         </td>
                         <td style={{
                           fontFamily: 'monospace', fontWeight: 700, fontSize: 12,
-                          color: calcVal !== undefined ? (isInput ? '#0070C0' : '#1e1e2e') : '#d1d5db',
+                          color: calcVal !== undefined ? (isInput ? '#0070C0' : (c.cell_type === 'formula' ? '#1a7d36' : '#1e1e2e')) : '#d1d5db',
                         }}>
-                          {calcVal !== undefined ? (typeof calcVal === 'number' ? calcVal.toLocaleString() : calcVal) : '—'}
+                          {calcVal !== undefined ? (
+                            <span title={c.cell_type === 'formula' ? `Formula: ${c.formula}` : ''}>
+                              {c.cell_type === 'formula' && <span style={{ fontSize: 9, opacity: 0.5, marginRight: 2 }}>ƒx </span>}
+                              {typeof calcVal === 'number' ? calcVal.toLocaleString() : calcVal}
+                            </span>
+                          ) : '—'}
                         </td>
                         {user.is_admin && (
                           <td>
