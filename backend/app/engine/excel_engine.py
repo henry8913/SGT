@@ -41,7 +41,11 @@ def _get_dsp_inputs(project_id: int, db: Session) -> dict:
     ).all()
     for f in formulas_list:
         try:
-            inputs[f.formula] = float(f.formula)
+            def_val = float(f.formula)
+            up = f.sheet.upper()
+            key = f"'[sgt.xlsx]{up}'!{f.campo}"
+            if key not in inputs:
+                inputs[key] = def_val
         except (ValueError, TypeError):
             pass
     machine = db.query(MachineCharacteristics).filter(
