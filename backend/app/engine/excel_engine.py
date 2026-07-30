@@ -91,37 +91,34 @@ def build_xlsx_from_db(project_id: int, db: Session) -> str:
     all_db_formulas = db.query(Formula).all()
 
     by_sheet: dict[str, dict[str, str]] = {}
+    cell_types: dict[tuple[str, str], str] = {}
     for f in all_db_formulas:
         if f.sheet not in by_sheet:
             by_sheet[f.sheet] = {}
         by_sheet[f.sheet][f.campo] = _normalize_formula(f.formula)
+        cell_types[(f.sheet, f.campo)] = f.cell_type or "formula"
+
+    input_values = _load_input_values(project_id, db)
 
     for sheet_name in SHEET_ORDER:
         if sheet_name not in by_sheet:
             continue
         ws = wb.create_sheet(title=sheet_name)
         formulas_dict = by_sheet[sheet_name]
-        max_col = 0
-        max_row = 0
-        for cell_ref in formulas_dict.keys():
-            import re
-            m = re.match(r'\$?([A-Z]+)\$?(\d+)', cell_ref)
-            if m:
-                col_str = m.group(1)
-                row = int(m.group(2))
-                col_idx = 0
-                for c in col_str:
-                    col_idx = col_idx * 26 + (ord(c) - ord('A') + 1)
-                max_col = max(max_col, col_idx)
-                max_row = max(max_row, row)
 
-        for cell_ref, formula_text in formulas_dict.items():
-            ws[cell_ref] = formula_text
-
-    input_values = _load_input_values(project_id, db)
-    for (sheet, cell), value in input_values.items():
-        if sheet in wb.sheetnames:
-            wb[sheet][cell] = value
+        for cell_ref, cell_text in formulas_dict.items():
+            ct = cell_types.get((sheet_name, cell_ref), "formula")
+            if (sheet_name, cell_ref) in input_values:
+                ws[cell_ref] = input_values[(sheet_name, cell_ref)]
+            elif ct in ("input", "constant"):
+                try:
+                    ws[cell_ref] = float(cell_text)
+                except (ValueError, TypeError):
+                    ws[cell_ref] = cell_text
+            elif ct == "label":
+                ws[cell_ref] = cell_text
+            else:
+                ws[cell_ref] = cell_text
 
     tmp_path = os.path.join(tempfile.gettempdir(), f"sgt_calc_{project_id}.xlsx")
     wb.save(tmp_path)
