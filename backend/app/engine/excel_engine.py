@@ -7,6 +7,7 @@ handling IF statements, ISNUMBER, sheet references, etc. just like Excel does.
 
 import json
 import os
+import re
 import tempfile
 from collections import OrderedDict
 from typing import Any
@@ -73,7 +74,12 @@ INPUT_SHEETS = {
 
 
 def _normalize_formula(formula: str) -> str:
-    return formula.replace("_xlfn.FORECAST.LINEAR", "FORECAST").replace("_xlfn.FLOOR.MATH", "FLOOR")
+    formula = formula.replace("_xlfn.FORECAST.LINEAR", "FORECAST").replace("_xlfn.FLOOR.MATH", "FLOOR")
+    if formula.startswith("=+"):
+        formula = "=" + formula[2:]
+    elif formula.startswith("+"):
+        formula = "=" + formula[1:]
+    return formula
 
 
 def build_xlsx_from_db(project_id: int, db: Session) -> str:
@@ -194,41 +200,66 @@ def run_engine(project_id: int, db: Session) -> dict[str, Any]:
     xlsx_path = build_xlsx_from_db(project_id, db)
 
     try:
-        from formulas import excel as fe
+        xl_model = formulas.ExcelModel()
+        xl_model.loads(xlsx_path)
 
-        xl_model = fe.ExcelModel()
-        xl_model.read(filepath=xlsx_path, output=False)
-        xl_model.calculate()
-        result = xl_model.to_dict()
+        dsp = xl_model.dsp
+
+        input_cells = {}
+        for key, cell in xl_model.cells.items():
+            ks = str(key)
+            m = re.match(r"\'.*?\](\w+)\'!\$?([A-Z]+)(\d+)", ks)
+            if not m:
+                continue
+            up_sheet = m.group(1)
+            sheet_canon = {s.upper(): s for s in SHEET_ORDER}.get(up_sheet)
+            if not sheet_canon:
+                continue
+
+            cell_val = cell.value
+            if cell_val is None or str(cell_val) == "empty":
+                continue
+            try:
+                input_cells[ks] = float(cell_val)
+            except (ValueError, TypeError):
+                pass
+
+        solution = dsp(input_cells)
+
+        sheet_values: dict[str, dict[str, float | str]] = {}
+        sheet_name_map = {s.upper(): s for s in SHEET_ORDER}
+
+        for key, val in solution.items():
+            ks = str(key)
+            m = re.match(r"\'.*?\](\w+)\'!\$?([A-Z]+)(\d+)", ks)
+            if not m:
+                continue
+            up_sheet = m.group(1)
+            cell_ref = m.group(2) + m.group(3)
+            sheet_canon = sheet_name_map.get(up_sheet)
+            if not sheet_canon:
+                continue
+
+            try:
+                raw = val.value if hasattr(val, 'value') else val
+                if hasattr(raw, '__getitem__'):
+                    raw = raw[0][0]
+                v = round(float(raw), 4)
+            except (ValueError, TypeError, IndexError, TypeError):
+                v = str(val)
+            sheet_values.setdefault(sheet_canon, {})[cell_ref] = v
 
         formatted = {}
         for sheet_name in SHEET_ORDER:
-            if sheet_name not in result:
+            values = sheet_values.get(sheet_name)
+            if not values:
                 continue
-            sheet_data = result[sheet_name]
-            if not sheet_data:
-                continue
-
             step_key = STEP_MAP.get(sheet_name, "altro")
-            values = {}
-            for cell_ref, cell_info in sheet_data.items():
-                if isinstance(cell_info, dict):
-                    val = cell_info.get("value", cell_info.get("formula", ""))
-                else:
-                    val = cell_info
-
-                if val is not None and val != "":
-                    try:
-                        values[cell_ref] = round(float(val), 4)
-                    except (ValueError, TypeError):
-                        values[cell_ref] = str(val)
-
-            if values:
-                formatted[step_key] = {
-                    "sheet": sheet_name,
-                    "cells": len(values),
-                    "values": values,
-                }
+            formatted[step_key] = {
+                "sheet": sheet_name,
+                "cells": len(values),
+                "values": values,
+            }
 
         return formatted
 
