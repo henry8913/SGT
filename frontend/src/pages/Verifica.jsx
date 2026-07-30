@@ -116,11 +116,17 @@ export default function Verifica() {
 
       setInputValues(newInputs);
 
+      let found = false;
       const resR = await api.get(`/projects/${projectId}/risultati`);
       for (const r of resR.data) {
         if (r.step === sd.key) {
           setResults(typeof r.dati === 'string' ? JSON.parse(r.dati) : r.dati);
+          found = true;
         }
+      }
+
+      if (!found) {
+        setTimeout(() => recalculate(), 300);
       }
     } catch (err) { console.error(err); }
     setLoading(false);
@@ -250,6 +256,8 @@ export default function Verifica() {
     try {
       await formulasApi.update(id, { formula: newFormula });
       setEditId(null);
+      const res = await formulasApi.list({ sheet: stepSheet });
+      setCells(res.data || []);
       await saveStepData();
       await recalculate();
     } catch (err) { alert('Errore salvataggio formula'); }
