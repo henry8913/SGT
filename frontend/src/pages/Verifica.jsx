@@ -117,18 +117,13 @@ export default function Verifica() {
 
       setInputValues(newInputs);
 
-      let found = false;
       const resR = await api.get(`/projects/${projectId}/risultati`);
       for (const r of resR.data) {
         if (r.step === sd.key) {
           setResults(typeof r.dati === 'string' ? JSON.parse(r.dati) : r.dati);
-          found = true;
         }
       }
-
-      if (!found) {
-        setTimeout(() => recalculate(sd.key), 300);
-      }
+      setTimeout(() => recalculate(sd.key), 100);
     } catch (err) { console.error(err); }
     setLoading(false);
   };
@@ -138,9 +133,10 @@ export default function Verifica() {
     if (stepKey === 'macchina' || stepKey === 'baricentri') {
       const machineData = {};
       cells.forEach(c => {
-        if (inputValues[c.campo]) {
+        if (inputValues[c.campo] !== undefined) {
           const field = CELL_TO_MACHINE_MAP[c.campo] || c.campo;
-          machineData[field] = parseFloat(inputValues[c.campo]) || 0;
+          const v = parseFloat(inputValues[c.campo]);
+          if (!isNaN(v)) machineData[field] = v;
         }
       });
       if (Object.keys(machineData).length > 0) {
@@ -149,13 +145,16 @@ export default function Verifica() {
     }
     if (['stabilita_q', 'stabilita_d', 'vento', 'carichi_ralla'].includes(stepKey)) {
       for (const [key, val] of Object.entries(inputValues)) {
-        if (val) {
-          const existing = await api.get(`/projects/${selectedProject}/stability`);
-          const found = existing.data.find(p => p.parametro === key);
-          if (found) {
-            await api.put(`/projects/${selectedProject}/stability/${found.id}`, { valore: parseFloat(val) || 0 });
-          } else {
-            await api.post(`/projects/${selectedProject}/stability`, { parametro: key, valore: parseFloat(val) || 0 });
+        if (val !== undefined && val !== '') {
+          const v = parseFloat(val);
+          if (!isNaN(v)) {
+            const existing = await api.get(`/projects/${selectedProject}/stability`);
+            const found = existing.data.find(p => p.parametro === key);
+            if (found) {
+              await api.put(`/projects/${selectedProject}/stability/${found.id}`, { valore: v });
+            } else {
+              await api.post(`/projects/${selectedProject}/stability`, { parametro: key, valore: v });
+            }
           }
         }
       }
@@ -163,11 +162,14 @@ export default function Verifica() {
     if (stepKey === 'masse') {
       const massesData = [];
       cells.forEach(c => {
-        if (inputValues[c.campo]) {
+        if (inputValues[c.campo] !== undefined) {
           const idx = parseInt(c.campo.match(/\d+/)?.[0] || '1') - 1;
           if (!massesData[idx]) massesData[idx] = {};
-          if (c.campo.startsWith('Q')) massesData[idx].massa_kg = parseFloat(inputValues[c.campo]) || 0;
-          if (c.campo.startsWith('T')) massesData[idx].braccio_m = parseFloat(inputValues[c.campo]) || 0;
+          const v = parseFloat(inputValues[c.campo]);
+          if (!isNaN(v)) {
+            if (c.campo.startsWith('Q')) massesData[idx].massa_kg = v;
+            if (c.campo.startsWith('T')) massesData[idx].braccio_m = v;
+          }
         }
       });
       for (let i = 0; i < massesData.length; i++) {
@@ -187,7 +189,7 @@ export default function Verifica() {
     }
     if (stepKey === 'geometria') {
       for (const [key, val] of Object.entries(inputValues)) {
-        if (val && key.startsWith('L')) {
+        if (val !== undefined && val !== '' && key.startsWith('L')) {
           const idx = parseInt(key.match(/\d+/)?.[0] || '0');
           try {
             const existing = await api.get(`/projects/${selectedProject}/geometry`);
@@ -200,7 +202,7 @@ export default function Verifica() {
     }
     if (stepKey === 'aree_vento') {
       for (const [key, val] of Object.entries(inputValues)) {
-        if (val && key.startsWith('V')) {
+        if (val !== undefined && val !== '' && key.startsWith('V')) {
           const idx = parseInt(key.match(/\d+/)?.[0] || '0');
           try {
             const existing = await api.get(`/projects/${selectedProject}/wind-areas`);
@@ -216,10 +218,11 @@ export default function Verifica() {
     if (stepKey === 'curve_carico') {
       const curvesData = [];
       cells.forEach(c => {
-        if (inputValues[c.campo] && c.campo.startsWith('R')) {
+        if (inputValues[c.campo] !== undefined && c.campo.startsWith('R')) {
           const idx = parseInt(c.campo.match(/\d+/)?.[0] || '1') - 1;
           if (!curvesData[idx]) curvesData[idx] = {};
-          curvesData[idx].carico_kg = parseFloat(inputValues[c.campo]) || 0;
+          const v = parseFloat(inputValues[c.campo]);
+          if (!isNaN(v)) curvesData[idx].carico_kg = v;
         }
       });
       for (let i = 0; i < curvesData.length; i++) {

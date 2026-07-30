@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.engine.excel_engine import invalidate_calc_cache
 from app.models.formulas import Formula
 from app.routers.auth import get_current_user
 from app.models.user import User
@@ -58,6 +59,7 @@ def update_formula(formula_id: int, data: FormulaUpdate, db: Session = Depends(g
         setattr(formula, key, val)
     db.commit()
     db.refresh(formula)
+    invalidate_calc_cache()
     return formula
 
 
@@ -238,6 +240,7 @@ def upload_excel(
             db.add(Formula(**f))
         db.commit()
 
+    invalidate_calc_cache()
     wb.close()
 
     return {

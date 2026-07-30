@@ -25,6 +25,84 @@ from app.models.wind_areas import WindArea
 from app.models.beam_profile import BeamProfile
 
 
+_calc_cache: dict[int, formulas.ExcelModel] = {}
+
+
+def invalidate_calc_cache(project_id: int = None):
+    if project_id is not None:
+        _calc_cache.pop(project_id, None)
+    else:
+        _calc_cache.clear()
+
+
+_sheet_name_map = {s.upper(): s for s in SHEET_ORDER}
+
+
+def _extract_cell_ref(ks: str):
+    m = re.match(r"\'.*?\](\w+)\'!\$?([A-Z]+)(\d+)", ks)
+    if not m:
+        return None, None, None
+    up_sheet = m.group(1)
+    cell_ref = m.group(2) + m.group(3)
+    sheet_canon = _sheet_name_map.get(up_sheet)
+    return sheet_canon, cell_ref, ks
+
+
+def _get_dsp_inputs(project_id: int, db: Session) -> dict:
+    inputs = {}
+    formulas_list = db.query(Formula).filter(
+        Formula.cell_type.in_(["input", "constant"])
+    ).all()
+    for f in formulas_list:
+        try:
+            inputs[f.formula] = float(f.formula)
+        except (ValueError, TypeError):
+            pass
+    machine = db.query(MachineCharacteristics).filter(
+        MachineCharacteristics.project_id == project_id
+    ).first()
+    if machine:
+        cols = ["sbraccio_max", "carico_punta_tiro2", "carico_punta_tiro24",
+                "carico_max_tiro2", "escursione_carrello_tiro2", "carico_max_tiro24",
+                "escursione_carrello_tiro24", "altezza_max", "diametro_funi_sollevamento",
+                "diametro_fune_carrello"]
+        s_cols = ["S3", "S4", "S5", "S6", "S7", "S8", "S9", "S10", "S12", "S13"]
+        for col, s in zip(cols, s_cols):
+            val = getattr(machine, col, None)
+            if val is not None:
+                key = f"'[sgt.xlsx]CARATTERISTICHE_MACCHINA'!{s}"
+                inputs[key] = float(val)
+    params = db.query(StabilityParam).filter(
+        StabilityParam.project_id == project_id
+    ).all()
+    for p in params:
+        if p.valore is not None:
+            for sheet in ["Stabilità C25-Q", "Stabilità C25-D"]:
+                key = f"'[sgt.xlsx]{sheet.upper()}'!{p.parametro}"
+                inputs[key] = float(p.valore)
+    masses = db.query(Mass).filter(
+        Mass.project_id == project_id, Mass.utilizzato == True
+    ).all()
+    for idx, m in enumerate(masses):
+        row = idx + 1
+        if m.massa_kg is not None:
+            key = f"'[sgt.xlsx]MASSE_PROPRIE'!Q{row}"
+            inputs[key] = float(m.massa_kg)
+        if m.braccio_m is not None:
+            key = f"'[sgt.xlsx]MASSE_PROPRIE'!T{row}"
+            inputs[key] = float(m.braccio_m)
+    curves = db.query(LoadCurve).filter(
+        LoadCurve.project_id == project_id
+    ).all()
+    for idx, c in enumerate(curves):
+        row = idx + 1
+        sheet = "Curve_di_carico II" if c.tipo == "II" else "Curve_di_carico II IV"
+        if c.carico_kg is not None:
+            key = f"'[sgt.xlsx]{sheet.upper()}'!R{row}"
+            inputs[key] = float(c.carico_kg)
+    return inputs
+
+
 SHEET_ORDER = [
     "Proprietà_beam",
     "Caratteristiche_macchina",
@@ -188,87 +266,60 @@ def _load_input_values(project_id: int, db: Session) -> dict[tuple[str, str], fl
 
 
 def run_engine(project_id: int, db: Session) -> dict[str, Any]:
-    """Run the Excel engine using the 'formulas' library.
+    sheet_name_map = {s.upper(): s for s in SHEET_ORDER}
 
-    Builds a temporary .xlsx from DB formulas + project input values,
-    then evaluates everything using formulas.Calculator(),
-    and returns structured results per sheet/step.
-
-    Returns:
-        dict: { step_key: { "sheet": ..., "cells": int, "values": { cell: value } } }
-    """
-    xlsx_path = build_xlsx_from_db(project_id, db)
-
-    try:
-        xl_model = formulas.ExcelModel()
-        xl_model.loads(xlsx_path)
-
-        dsp = xl_model.dsp
-
-        input_cells = {}
-        for key, cell in xl_model.cells.items():
-            ks = str(key)
-            m = re.match(r"\'.*?\](\w+)\'!\$?([A-Z]+)(\d+)", ks)
-            if not m:
-                continue
-            up_sheet = m.group(1)
-            sheet_canon = {s.upper(): s for s in SHEET_ORDER}.get(up_sheet)
-            if not sheet_canon:
-                continue
-
-            cell_val = cell.value
-            if cell_val is None or str(cell_val) == "empty":
-                continue
+    if project_id not in _calc_cache:
+        xlsx_path = build_xlsx_from_db(project_id, db)
+        try:
+            xl_model = formulas.ExcelModel()
+            xl_model.loads(xlsx_path)
+            _calc_cache[project_id] = xl_model
+        finally:
             try:
-                input_cells[ks] = float(cell_val)
-            except (ValueError, TypeError):
+                os.remove(xlsx_path)
+            except Exception:
                 pass
 
+    xl_model = _calc_cache[project_id]
+    dsp = xl_model.dsp
+    input_cells = _get_dsp_inputs(project_id, db)
+
+    try:
         solution = dsp(input_cells)
-
-        sheet_values: dict[str, dict[str, float | str]] = {}
-        sheet_name_map = {s.upper(): s for s in SHEET_ORDER}
-
-        for key, val in solution.items():
-            ks = str(key)
-            m = re.match(r"\'.*?\](\w+)\'!\$?([A-Z]+)(\d+)", ks)
-            if not m:
-                continue
-            up_sheet = m.group(1)
-            cell_ref = m.group(2) + m.group(3)
-            sheet_canon = sheet_name_map.get(up_sheet)
-            if not sheet_canon:
-                continue
-
-            try:
-                raw = val.value if hasattr(val, 'value') else val
-                if hasattr(raw, '__getitem__'):
-                    raw = raw[0][0]
-                v = round(float(raw), 4)
-            except (ValueError, TypeError, IndexError, TypeError):
-                v = str(val)
-            sheet_values.setdefault(sheet_canon, {})[cell_ref] = v
-
-        formatted = {}
-        for sheet_name in SHEET_ORDER:
-            values = sheet_values.get(sheet_name)
-            if not values:
-                continue
-            step_key = STEP_MAP.get(sheet_name, "altro")
-            formatted[step_key] = {
-                "sheet": sheet_name,
-                "cells": len(values),
-                "values": values,
-            }
-
-        return formatted
-
     except Exception as e:
         import traceback
         return {"error": str(e), "traceback": traceback.format_exc()}
 
-    finally:
+    sheet_values: dict[str, dict[str, float | str]] = {}
+    for key, val in solution.items():
+        ks = str(key)
+        m = re.match(r"\'.*?\](\w+)\'!\$?([A-Z]+)(\d+)", ks)
+        if not m:
+            continue
+        up_sheet = m.group(1)
+        cell_ref = m.group(2) + m.group(3)
+        sheet_canon = sheet_name_map.get(up_sheet)
+        if not sheet_canon:
+            continue
         try:
-            os.remove(xlsx_path)
-        except Exception:
-            pass
+            raw = val.value if hasattr(val, 'value') else val
+            if hasattr(raw, '__getitem__'):
+                raw = raw[0][0]
+            v = round(float(raw), 4)
+        except (ValueError, TypeError, IndexError):
+            v = str(val)
+        sheet_values.setdefault(sheet_canon, {})[cell_ref] = v
+
+    formatted = {}
+    for sheet_name in SHEET_ORDER:
+        values = sheet_values.get(sheet_name)
+        if not values:
+            continue
+        step_key = STEP_MAP.get(sheet_name, "altro")
+        formatted[step_key] = {
+            "sheet": sheet_name,
+            "cells": len(values),
+            "values": values,
+        }
+
+    return formatted
