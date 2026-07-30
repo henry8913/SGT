@@ -38,108 +38,39 @@ def seed_database():
         db.commit()
 
     if db.query(Formula).count() == 0:
-        all_formulas = [
-            # === CARATTERISTICHE MACCHINA ===
-            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S3", label="Escursione massima del carico utile", formula="65", default_value="65", cell_type="input"),
-            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S4", label="Carico utile massimo in punta braccio con tiro in II, Pta", formula="1800", default_value="1800", cell_type="input"),
-            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S5", label="Carico utile massimo in punta braccio con tiro in II/IV, Pta", formula="1800", default_value="1800", cell_type="input"),
-            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S6", label="Carico utile massimo della macchina con tiro II, Pu", formula="10000", default_value="10000", cell_type="input"),
-            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S7", label="Escursione massima del carrello con carico utile assoluto con tiro in II", formula="16", default_value="16", cell_type="input"),
-            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S8", label="Carico utile massimo della macchina con tiro II/IV, Pu", formula="10000", default_value="10000", cell_type="input"),
-            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S9", label="Escursione massima del carrello con carico utile assoluto con tiro in II/IV", formula="16", default_value="16", cell_type="input"),
-            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S10", label="Altezza massima libera sotto gancio", formula="70", default_value="70", cell_type="input"),
-            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S11", label="Fune di sollevamento", formula="16", default_value="16", cell_type="input"),
-            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S12", label="Fune del carrello", formula="7", default_value="7", cell_type="input"),
-            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S14", label="Derivata 0: Escursione massima del carico utile", formula="S3", dipende_da=json.dumps(["S3"]), cell_type="formula"),
-            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S15", label="Derivata 1: Escursione massima del carico utile", formula="60", default_value="60", cell_type="input"),
-            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S16", label="Derivata 2: Escursione massima del carico utile", formula="55", default_value="55", cell_type="input"),
-            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S17", label="Derivata 3: Escursione massima del carico utile", formula="50", default_value="50", cell_type="input"),
-            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S18", label="Derivata 4: Escursione massima del carico utile", formula="45", default_value="45", cell_type="input"),
-            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S19", label="Derivata 5: Escursione massima del carico utile", formula="40", default_value="40", cell_type="input"),
-            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S20", label="Derivata 6: Escursione massima del carico utile", formula="35", default_value="35", cell_type="input"),
-            Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S22", label="Interasse carro di base 4,5x4,5", formula="4.5", default_value="4.5", cell_type="input"),
-
-            # === BARICENTRI ===
-            Formula(step="baricentri", sheet="Baricentri", campo="AC29", label="Momento statico braccio", formula="Masse_proprie.Q52 * Macchina.S14", dipende_da=json.dumps(["Masse_proprie.Q52", "Macchina.S14"])),
-            Formula(step="baricentri", sheet="Baricentri", campo="AD29", label="Coordinata X baricentro", formula="AC29 / Masse_proprie.Q52", dipende_da=json.dumps(["AC29", "Masse_proprie.Q52"])),
-            Formula(step="baricentri", sheet="Baricentri", campo="AE29", label="Coordinata Y baricentro", formula="AD29 * 0.5", dipende_da=json.dumps(["AD29"])),
-            Formula(step="baricentri", sheet="Baricentri", campo="AF29", label="Momento statico totale", formula="AC29 + Masse_proprie.T1", dipende_da=json.dumps(["AC29", "Masse_proprie.T1"])),
-
-            # === AREE VENTO ===
-            Formula(step="aree_vento", sheet="A_b", campo="B5", label="Area braccio coefficiente 1", formula="Geometria_braccio.L9 * Geometria_braccio.L10", dipende_da=json.dumps(["Geometria_braccio.L9", "Geometria_braccio.L10"])),
-            Formula(step="aree_vento", sheet="A_b", campo="B6", label="Area braccio coefficiente 2", formula="B5 * 0.6", dipende_da=json.dumps(["B5"])),
-            Formula(step="aree_vento", sheet="A_rc", campo="C5", label="Area rotazione coefficiente", formula="Macchina.S14 * 0.3", dipende_da=json.dumps(["Macchina.S14"])),
-            Formula(step="aree_vento", sheet="A_cb", campo="D5", label="Area controbraccio coefficiente", formula="B5 * 0.4", dipende_da=json.dumps(["B5"])),
-            Formula(step="aree_vento", sheet="A_Pu", campo="E5", label="Area carico utile", formula="Macchina.S16 * Macchina.S17 / 1000", dipende_da=json.dumps(["Macchina.S16", "Macchina.S17"])),
-
-            # === VENTO ===
-            Formula(step="vento", sheet="Vento", campo="M10", label="Pressione vento normativa", formula="PW_NORMA(J329, M10)", dipende_da=json.dumps(["Stabilità.J329", "Stabilità.M10"])),
-            Formula(step="vento", sheet="Vento", campo="M11", label="Forza vento braccio", formula="M10 * A_b.B6", dipende_da=json.dumps(["M10", "A_b.B6"])),
-            Formula(step="vento", sheet="Vento", campo="M12", label="Forza vento rotazione", formula="M10 * A_rc.C5", dipende_da=json.dumps(["M10", "A_rc.C5"])),
-            Formula(step="vento", sheet="Vento", campo="M13", label="Forza vento controbraccio", formula="M10 * A_cb.D5", dipende_da=json.dumps(["M10", "A_cb.D5"])),
-            Formula(step="vento", sheet="Vento", campo="M14", label="Forza vento carico", formula="M10 * A_Pu.E5", dipende_da=json.dumps(["M10", "A_Pu.E5"])),
-            Formula(step="vento", sheet="Vento", campo="M15", label="Forza vento totale", formula="M11 + M12 + M13 + M14", dipende_da=json.dumps(["M11", "M12", "M13", "M14"])),
-            Formula(step="vento", sheet="Vento", campo="M16", label="Momento vento", formula="M15 * Macchina.S10 * 0.5", dipende_da=json.dumps(["M15", "Macchina.S10"])),
-
-            # === STABILITÀ C25-Q ===
-            Formula(step="stabilita_q", sheet="Stabilità C25-Q", campo="AO4", label="Sbraccio", formula="Macchina.S14", dipende_da=json.dumps(["Macchina.S14"])),
-            Formula(step="stabilita_q", sheet="Stabilità C25-Q", campo="AP4", label="Carrello", formula="Masse_proprie.Q1", dipende_da=json.dumps(["Masse_proprie.Q1"])),
-            Formula(step="stabilita_q", sheet="Stabilità C25-Q", campo="AQ4", label="Carico utile", formula="Macchina.S4", dipende_da=json.dumps(["Macchina.S4"])),
-            Formula(step="stabilita_q", sheet="Stabilità C25-Q", campo="AR4", label="Forza vento su braccio", formula="M11", dipende_da=json.dumps(["M11"])),
-            Formula(step="stabilita_q", sheet="Stabilità C25-Q", campo="AS4", label="Momento ribaltante", formula="(AP4 + AQ4) * AO4 + AR4 * Macchina.S10", dipende_da=json.dumps(["AP4", "AQ4", "AO4", "AR4", "Macchina.S10"])),
-            Formula(step="stabilita_q", sheet="Stabilità C25-Q", campo="AT4", label="Momento stabilizzante", formula="MW_TORRE(J38, J39, J40)", dipende_da=json.dumps(["Stabilità.J38", "Stabilità.J39", "Stabilità.J40"])),
-            Formula(step="stabilita_q", sheet="Stabilità C25-Q", campo="AU4", label="Coefficiente sicurezza", formula="AT4 / AS4", dipende_da=json.dumps(["AT4", "AS4"])),
-            Formula(step="stabilita_q", sheet="Stabilità C25-Q", campo="AV4", label="Esito", formula="IF(AU4 >= J30, 1, 0)", dipende_da=json.dumps(["AU4", "Stabilità.J30"])),
-
-            # === STABILITÀ C25-D ===
-            Formula(step="stabilita_d", sheet="Stabilità C25-D", campo="BP4", label="Sbraccio diagonale", formula="Macchina.S14 * 0.707", dipende_da=json.dumps(["Macchina.S14"])),
-            Formula(step="stabilita_d", sheet="Stabilità C25-D", campo="BQ4", label="Carico utile diagonale", formula="AQ4 * 0.9", dipende_da=json.dumps(["AQ4"])),
-            Formula(step="stabilita_d", sheet="Stabilità C25-D", campo="BR4", label="Momento ribaltante diagonale", formula="(AP4 + BQ4) * BP4 + AR4 * Macchina.S10", dipende_da=json.dumps(["AP4", "BQ4", "BP4", "AR4", "Macchina.S10"])),
-            Formula(step="stabilita_d", sheet="Stabilità C25-D", campo="BS4", label="Momento stabilizzante diagonale", formula="AT4 * 0.9", dipende_da=json.dumps(["AT4"])),
-            Formula(step="stabilita_d", sheet="Stabilità C25-D", campo="BT4", label="Coefficiente sicurezza diagonale", formula="BS4 / BR4", dipende_da=json.dumps(["BS4", "BR4"])),
-            Formula(step="stabilita_d", sheet="Stabilità C25-D", campo="BU4", label="Esito diagonale", formula="IF(BT4 >= J30, 1, 0)", dipende_da=json.dumps(["BT4", "Stabilità.J30"])),
-
-            # === CARICHI RALLA ===
-            Formula(step="carichi_ralla", sheet="Carichi ralla e base - C25", campo="CA4", label="Carico verticale ralla", formula="AP4 + AQ4 + J38", dipende_da=json.dumps(["AP4", "AQ4", "Stabilità.J38"])),
-            Formula(step="carichi_ralla", sheet="Carichi ralla e base - C25", campo="CB4", label="Momento ribaltante ralla", formula="AS4 * J35", dipende_da=json.dumps(["AS4", "Stabilità.J35"])),
-            Formula(step="carichi_ralla", sheet="Carichi ralla e base - C25", campo="CC4", label="Momento vento ralla", formula="M16 * J37", dipende_da=json.dumps(["M16", "Stabilità.J37"])),
-            Formula(step="carichi_ralla", sheet="Carichi ralla e base - C25", campo="CD4", label="Momento totale ralla", formula="CB4 + CC4", dipende_da=json.dumps(["CB4", "CC4"])),
-            Formula(step="carichi_ralla", sheet="Carichi ralla e base - C25", campo="CE4", label="Trazione ralla", formula="CA4 * 0.2", dipende_da=json.dumps(["CA4"])),
-
-            # === CURVE DI CARICO ===
-            Formula(step="curve_carico", sheet="Curve_di_carico II", campo="DA4", label="Carico massimo a 5m", formula="Macchina.S6", dipende_da=json.dumps(["Macchina.S6"])),
-            Formula(step="curve_carico", sheet="Curve_di_carico II", campo="DB4", label="Carico a 10m", formula="DA4 * (65 - 10) / (65 - 5)", dipende_da=json.dumps(["DA4"])),
-            Formula(step="curve_carico", sheet="Curve_di_carico II + II IV", campo="DC4", label="Carico a 15m", formula="DA4 * (65 - 15) / (65 - 5)", dipende_da=json.dumps(["DA4"])),
-            Formula(step="curve_carico", sheet="Curve_di_carico II + II IV", campo="DD4", label="Carico a 20m", formula="DA4 * (65 - 20) / (65 - 5)", dipende_da=json.dumps(["DA4"])),
-            Formula(step="curve_carico", sheet="Curve_di_carico II + II IV", campo="DE4", label="Carico a 25m", formula="DA4 * (65 - 25) / (65 - 5)", dipende_da=json.dumps(["DA4"])),
-            Formula(step="curve_carico", sheet="Curve_di_carico II + II IV", campo="DF4", label="Carico a 30m", formula="DA4 * (65 - 30) / (65 - 5)", dipende_da=json.dumps(["DA4"])),
-            Formula(step="curve_carico", sheet="Curve_di_carico II + II IV", campo="DG4", label="Carico a 35m", formula="DA4 * (65 - 35) / (65 - 5)", dipende_da=json.dumps(["DA4"])),
-            Formula(step="curve_carico", sheet="Curve_di_carico II + II IV", campo="DH4", label="Carico a 40m", formula="DA4 * (65 - 40) / (65 - 5)", dipende_da=json.dumps(["DA4"])),
-            Formula(step="curve_carico", sheet="Curve_di_carico II + II IV", campo="DI4", label="Carico a 45m", formula="DA4 * (65 - 45) / (65 - 5)", dipende_da=json.dumps(["DA4"])),
-            Formula(step="curve_carico", sheet="Curve_di_carico II + II IV", campo="DJ4", label="Carico a 50m", formula="DA4 * (65 - 50) / (65 - 5)", dipende_da=json.dumps(["DA4"])),
-            Formula(step="curve_carico", sheet="Curve_di_carico II + II IV", campo="DK4", label="Carico a 55m", formula="DA4 * (65 - 55) / (65 - 5)", dipende_da=json.dumps(["DA4"])),
-            Formula(step="curve_carico", sheet="Curve_di_carico II + II IV", campo="DL4", label="Carico a 60m", formula="DA4 * (65 - 60) / (65 - 5)", dipende_da=json.dumps(["DA4"])),
-            Formula(step="curve_carico", sheet="Curve_di_carico II + II IV", campo="DM4", label="Carico a 65m", formula="Macchina.S4", dipende_da=json.dumps(["Macchina.S4"])),
-
-            # === DIAGRAMMA DI CARICO ===
-            Formula(step="diagramma", sheet="Diagramma di carico", campo="EA4", label="Carico diagramma 5m", formula="DA4 * 0.95", dipende_da=json.dumps(["DA4"])),
-            Formula(step="diagramma", sheet="Diagramma di carico", campo="EB4", label="Carico diagramma 10m", formula="DB4 * 0.95", dipende_da=json.dumps(["DB4"])),
-            Formula(step="diagramma", sheet="Diagramma di carico", campo="EC4", label="Carico diagramma 15m", formula="DC4 * 0.95", dipende_da=json.dumps(["DC4"])),
-            Formula(step="diagramma", sheet="Diagramma di carico", campo="ED4", label="Carico diagramma 20m", formula="DD4 * 0.95", dipende_da=json.dumps(["DD4"])),
-            Formula(step="diagramma", sheet="Diagramma di carico", campo="EE4", label="Carico diagramma 25m", formula="DE4 * 0.95", dipende_da=json.dumps(["DE4"])),
-            Formula(step="diagramma", sheet="Diagramma di carico", campo="EF4", label="Carico diagramma 30m", formula="DF4 * 0.95", dipende_da=json.dumps(["DF4"])),
-            Formula(step="diagramma", sheet="Diagramma di carico", campo="EG4", label="Carico diagramma 35m", formula="DG4 * 0.95", dipende_da=json.dumps(["DG4"])),
-            Formula(step="diagramma", sheet="Diagramma di carico", campo="EH4", label="Carico diagramma 40m", formula="DH4 * 0.95", dipende_da=json.dumps(["DH4"])),
-            Formula(step="diagramma", sheet="Diagramma di carico", campo="EI4", label="Carico diagramma 45m", formula="DI4 * 0.95", dipende_da=json.dumps(["DI4"])),
-            Formula(step="diagramma", sheet="Diagramma di carico", campo="EJ4", label="Carico diagramma 50m", formula="DJ4 * 0.95", dipende_da=json.dumps(["DJ4"])),
-            Formula(step="diagramma", sheet="Diagramma di carico", campo="EK4", label="Carico diagramma 55m", formula="DK4 * 0.95", dipende_da=json.dumps(["DK4"])),
-            Formula(step="diagramma", sheet="Diagramma di carico", campo="EL4", label="Carico diagramma 60m", formula="DL4 * 0.95", dipende_da=json.dumps(["DL4"])),
-            Formula(step="diagramma", sheet="Diagramma di carico", campo="EM4", label="Carico diagramma 65m", formula="DM4 * 0.95", dipende_da=json.dumps(["DM4"])),
-        ]
-        for f in all_formulas:
-            db.add(f)
-        db.commit()
-        print(f"Inserted {len(all_formulas)} formulas")
+        import os
+        json_path = os.path.join(os.path.dirname(__file__), "formulas_seed.json")
+        if os.path.exists(json_path):
+            with open(json_path) as f:
+                all_formulas_data = json.load(f)
+            all_formulas = [Formula(**fd) for fd in all_formulas_data]
+            for f in all_formulas:
+                db.add(f)
+            db.commit()
+            print(f"Inserted {len(all_formulas)} formulas from formulas_seed.json")
+        else:
+            print("formulas_seed.json not found, seeding default formulas...")
+            all_formulas = [
+                Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S3", label="Escursione massima del carico utile", formula="65", default_value="65", cell_type="input"),
+                Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S4", label="Carico utile massimo in punta braccio con tiro in II, Pta", formula="1800", default_value="1800", cell_type="input"),
+                Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S10", label="Altezza massima libera sotto gancio", formula="70", default_value="70", cell_type="input"),
+                Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S14", label="Derivata 0: Escursione massima del carico utile", formula="S3", dipende_da=json.dumps(["S3"]), cell_type="formula"),
+                Formula(step="baricentri", sheet="Baricentri", campo="AC29", label="Momento statico braccio", formula="Masse_proprie.Q52 * Macchina.S14", dipende_da=json.dumps(["Masse_proprie.Q52", "Macchina.S14"])),
+                Formula(step="baricentri", sheet="Baricentri", campo="AD29", label="Coordinata X baricentro", formula="AC29 / Masse_proprie.Q52", dipende_da=json.dumps(["AC29", "Masse_proprie.Q52"])),
+                Formula(step="stabilita_q", sheet="Stabilità C25-Q", campo="AO4", label="Sbraccio", formula="Macchina.S14", dipende_da=json.dumps(["Macchina.S14"])),
+                Formula(step="stabilita_q", sheet="Stabilità C25-Q", campo="AS4", label="Momento ribaltante", formula="(AP4 + AQ4) * AO4 + AR4 * Macchina.S10", dipende_da=json.dumps(["AP4", "AQ4", "AO4", "AR4", "Macchina.S10"])),
+                Formula(step="stabilita_q", sheet="Stabilità C25-Q", campo="AU4", label="Coefficiente sicurezza", formula="AT4 / AS4", dipende_da=json.dumps(["AT4", "AS4"])),
+                Formula(step="stabilita_q", sheet="Stabilità C25-Q", campo="AV4", label="Esito", formula="IF(AU4 >= J30, 1, 0)", dipende_da=json.dumps(["AU4", "Stabilità.J30"])),
+                Formula(step="stabilita_d", sheet="Stabilità C25-D", campo="BP4", label="Sbraccio diagonale", formula="Macchina.S14 * 0.707", dipende_da=json.dumps(["Macchina.S14"])),
+                Formula(step="stabilita_d", sheet="Stabilità C25-D", campo="BT4", label="Coefficiente sicurezza diagonale", formula="BS4 / BR4", dipende_da=json.dumps(["BS4", "BR4"])),
+                Formula(step="stabilita_d", sheet="Stabilità C25-D", campo="BU4", label="Esito diagonale", formula="IF(BT4 >= J30, 1, 0)", dipende_da=json.dumps(["BT4", "Stabilità.J30"])),
+                Formula(step="carichi_ralla", sheet="Carichi ralla e base - C25", campo="CA4", label="Carico verticale ralla", formula="AP4 + AQ4 + J38", dipende_da=json.dumps(["AP4", "AQ4", "Stabilità.J38"])),
+                Formula(step="carichi_ralla", sheet="Carichi ralla e base - C25", campo="CE4", label="Trazione ralla", formula="CA4 * 0.2", dipende_da=json.dumps(["CA4"])),
+            ]
+            for f in all_formulas:
+                db.add(f)
+            db.commit()
+            print(f"Inserted {len(all_formulas)} default formulas")
 
     if db.query(BeamProfile).count() == 0:
         sample_profiles = [

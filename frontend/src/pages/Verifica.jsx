@@ -3,10 +3,13 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import api, { projects, formulas as formulasApi } from '../api/client';
 
 const STEPS = [
-  { key: 'macchina', label: 'Caratteristiche macchina', desc: 'Input: sbraccio, carichi, altezze' },
-  { key: 'baricentri', label: 'Baricentri', desc: 'Calcolo centro di gravità' },
-  { key: 'aree_vento', label: 'Aree vento', desc: 'Coefficienti aree vento' },
+  { key: 'macchina', label: 'Caratteristiche macchina', desc: 'Sbraccio, carichi, altezze macchina' },
+  { key: 'geometria', label: 'Geometria braccio', desc: 'Dimensioni e profili elementi braccio' },
+  { key: 'masse', label: 'Masse proprie', desc: 'Masse e baricentri componenti' },
+  { key: 'baricentri', label: 'Baricentri', desc: 'Calcolo centro di gravità complessivo' },
+  { key: 'aree_vento', label: 'Aree vento', desc: 'Coefficienti e aree esposizione vento' },
   { key: 'vento', label: 'Vento', desc: 'Forze del vento sulla gru' },
+  { key: 'curve_carico', label: 'Curve di carico', desc: 'Portate massime per raggio' },
   { key: 'stabilita_q', label: 'Stabilità C25-Q', desc: 'Verifica configurazione quadrato' },
   { key: 'stabilita_d', label: 'Stabilità C25-D', desc: 'Verifica configurazione diagonale' },
   { key: 'carichi_ralla', label: 'Carichi ralla', desc: 'Carichi su ralla e base' },
@@ -99,6 +102,14 @@ export default function Verifica() {
       try {
         const windRes = await api.get(`/projects/${projectId}/wind-areas`);
         windRes.data.forEach((a, i) => { if (a.valore !== null) newInputs[`V${i + 1}`] = String(a.valore); });
+      } catch (e) {}
+      try {
+        const geomRes = await api.get(`/projects/${projectId}/geometry`);
+        if (Array.isArray(geomRes.data)) {
+          geomRes.data.forEach((g, i) => {
+            if (g.lunghezza !== null) newInputs[`L${i + 16}`] = String(g.lunghezza);
+          });
+        }
       } catch (e) {}
 
       setInputValues(newInputs);
