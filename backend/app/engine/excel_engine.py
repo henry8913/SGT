@@ -196,7 +196,7 @@ def build_xlsx_from_db(project_id: int, db: Session) -> str:
             else:
                 ws[cell_ref] = cell_text
 
-    tmp_path = os.path.join(tempfile.gettempdir(), f"sgt_calc_{project_id}.xlsx")
+    tmp_path = os.path.join(tempfile.gettempdir(), "sgt.xlsx")
     wb.save(tmp_path)
     wb.close()
     return tmp_path
