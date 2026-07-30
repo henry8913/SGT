@@ -126,7 +126,7 @@ export default function Verifica() {
       }
 
       if (!found) {
-        setTimeout(() => recalculate(), 300);
+        setTimeout(() => recalculate(sd.key), 300);
       }
     } catch (err) { console.error(err); }
     setLoading(false);
@@ -210,14 +210,15 @@ export default function Verifica() {
     }
   };
 
-  const recalculate = async () => {
+  const recalculate = async (targetStepKey) => {
     if (!selectedProject) return;
+    const sk = targetStepKey || stepKey;
     setCalculating(true);
     try {
       await api.post(`/projects/${selectedProject}/calcola`);
       const resR = await api.get(`/projects/${selectedProject}/risultati`);
       for (const r of resR.data) {
-        if (r.step === stepKey) {
+        if (r.step === sk) {
           setResults(typeof r.dati === 'string' ? JSON.parse(r.dati) : r.dati);
         }
       }
@@ -229,10 +230,11 @@ export default function Verifica() {
 
   const triggerAutoCalc = () => {
     if (calcTimer.current) clearTimeout(calcTimer.current);
+    const sk = stepKey;
     calcTimer.current = setTimeout(async () => {
       try {
         await saveStepData();
-        await recalculate();
+        await recalculate(sk);
       } catch (e) {
         console.error('Auto calc error:', e);
       }
@@ -259,7 +261,7 @@ export default function Verifica() {
       const res = await formulasApi.list({ sheet: stepSheet });
       setCells(res.data || []);
       await saveStepData();
-      await recalculate();
+      await recalculate(stepKey);
     } catch (err) { alert('Errore salvataggio formula'); }
   };
 
