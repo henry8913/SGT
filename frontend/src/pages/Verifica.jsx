@@ -427,7 +427,7 @@ export default function Verifica() {
                                       cursor: user.is_admin && isFormula ? 'pointer' : 'default',
                                       textDecoration: user.is_admin && isFormula ? 'underline dotted #9ca3af' : 'none',
                                     }}>
-                                    {c.formula}
+                                    {isInput ? (inputValues[c.campo] !== undefined ? inputValues[c.campo] : (c.default_value || c.formula)) : c.formula}
                                   </code>
                                 )}
                               </td>
