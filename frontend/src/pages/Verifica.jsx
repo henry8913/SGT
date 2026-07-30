@@ -46,11 +46,12 @@ export default function Verifica() {
   const [cells, setCells] = useState([]);
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [calculating, setCalculating] = useState(false);
+  const [status, setStatus] = useState('idle');
   const [editId, setEditId] = useState(null);
   const [editText, setEditText] = useState('');
   const [inputValues, setInputValues] = useState({});
   const calcTimer = useRef(null);
+  const statusTimer = useRef(null);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   useEffect(() => {
@@ -184,6 +185,34 @@ export default function Verifica() {
         }
       }
     }
+    if (stepKey === 'geometria') {
+      for (const [key, val] of Object.entries(inputValues)) {
+        if (val && key.startsWith('L')) {
+          const idx = parseInt(key.match(/\d+/)?.[0] || '0');
+          try {
+            const existing = await api.get(`/projects/${selectedProject}/geometry`);
+            if (existing.data[idx - 16]) {
+              await api.put(`/projects/${selectedProject}/geometry/${existing.data[idx - 16].id}`, { lunghezza: parseFloat(val) || 0 });
+            }
+          } catch (e) {}
+        }
+      }
+    }
+    if (stepKey === 'aree_vento') {
+      for (const [key, val] of Object.entries(inputValues)) {
+        if (val && key.startsWith('V')) {
+          const idx = parseInt(key.match(/\d+/)?.[0] || '0');
+          try {
+            const existing = await api.get(`/projects/${selectedProject}/wind-areas`);
+            if (existing.data[idx - 1]) {
+              await api.put(`/projects/${selectedProject}/wind-areas/${existing.data[idx - 1].id}`, { valore: parseFloat(val) || 0 });
+            } else {
+              await api.post(`/projects/${selectedProject}/wind-areas`, { parte: stepSheet?.split('_').pop()?.toLowerCase() || '', valore: parseFloat(val) || 0 });
+            }
+          } catch (e) {}
+        }
+      }
+    }
     if (stepKey === 'curve_carico') {
       const curvesData = [];
       cells.forEach(c => {
@@ -213,7 +242,7 @@ export default function Verifica() {
   const recalculate = async (targetStepKey) => {
     if (!selectedProject) return;
     const sk = targetStepKey || stepKey;
-    setCalculating(true);
+    setStatus('calculating');
     try {
       await api.post(`/projects/${selectedProject}/calcola`);
       const resR = await api.get(`/projects/${selectedProject}/risultati`);
@@ -222,23 +251,24 @@ export default function Verifica() {
           setResults(typeof r.dati === 'string' ? JSON.parse(r.dati) : r.dati);
         }
       }
+      setStatus('done');
     } catch (err) {
       console.error('Calc error:', err);
+      setStatus('idle');
     }
-    setCalculating(false);
+    if (statusTimer.current) clearTimeout(statusTimer.current);
+    statusTimer.current = setTimeout(() => setStatus('idle'), 2000);
   };
 
   const triggerAutoCalc = () => {
-    if (calcTimer.current) clearTimeout(calcTimer.current);
-    const sk = stepKey;
-    calcTimer.current = setTimeout(async () => {
-      try {
-        await saveStepData();
-        await recalculate(sk);
-      } catch (e) {
-        console.error('Auto calc error:', e);
-      }
-    }, 800);
+    setStatus('saving');
+    if (statusTimer.current) clearTimeout(statusTimer.current);
+    saveStepData().then(() => {
+      setStatus('saved');
+      if (calcTimer.current) clearTimeout(calcTimer.current);
+      const sk = stepKey;
+      calcTimer.current = setTimeout(() => recalculate(sk), 600);
+    }).catch(() => setStatus('idle'));
   };
 
   const handleProjectSelect = async (projectId) => {
@@ -311,9 +341,16 @@ export default function Verifica() {
                 {cells.length} celle ({inputs.length} input, {formulaCells.length} formule, {constants.length} costanti)
               </span>
             </div>
-            <div style={{ fontSize: 12, color: calculating ? '#D4A017' : '#6b7280', display: 'flex', alignItems: 'center', gap: 6 }}>
-              {calculating && <span className="spinner" style={{ display: 'inline-block', width: 12, height: 12, border: '2px solid #D4A017', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />}
-              {calculating ? 'Calcolo in corso...' : '✓ Auto-calcolo attivo'}
+            <div style={{
+              fontSize: 12, display: 'flex', alignItems: 'center', gap: 8,
+              color: status === 'calculating' ? '#D4A017' : status === 'done' ? '#16a34a' : status === 'saving' || status === 'saved' ? '#0070C0' : '#6b7280',
+              fontWeight: status === 'done' || status === 'saved' ? 600 : 400,
+            }}>
+              {status === 'saving' && <><span className="spinner" style={{ display: 'inline-block', width: 12, height: 12, border: '2px solid #0070C0', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} /> Salvataggio...</>}
+              {status === 'saved' && <><span style={{ color: '#0070C0' }}>✓</span> Salvato</>}
+              {status === 'calculating' && <><span className="spinner" style={{ display: 'inline-block', width: 12, height: 12, border: '2px solid #D4A017', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} /> Calcolo formule...</>}
+              {status === 'done' && <><span style={{ color: '#16a34a' }}>✓</span> Formule aggiornate</>}
+              {status === 'idle' && '✎ Modifica un input per iniziare'}
             </div>
           </div>
 
