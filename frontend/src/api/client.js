@@ -80,7 +80,7 @@ export const loadCurves = {
 };
 
 export const formulas = {
-  list: (step) => api.get('/formulas', { params: { step } }),
+  list: (params) => api.get('/formulas', { params: typeof params === 'object' ? params : { step: params } }),
   get: (id) => api.get(`/formulas/${id}`),
   create: (data) => api.post('/formulas', data),
   update: (id, data) => api.put(`/formulas/${id}`, data),

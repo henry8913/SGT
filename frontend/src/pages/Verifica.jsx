@@ -1,19 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import api, { projects, formulas as formulasApi } from '../api/client';
 
 const STEPS = [
-  { key: 'macchina', label: 'Caratteristiche macchina', desc: 'Sbraccio, carichi, altezze macchina' },
-  { key: 'geometria', label: 'Geometria braccio', desc: 'Dimensioni e profili elementi braccio' },
-  { key: 'masse', label: 'Masse proprie', desc: 'Masse e baricentri componenti' },
-  { key: 'baricentri', label: 'Baricentri', desc: 'Calcolo centro di gravità complessivo' },
-  { key: 'aree_vento', label: 'Aree vento', desc: 'Coefficienti e aree esposizione vento' },
-  { key: 'vento', label: 'Vento', desc: 'Forze del vento sulla gru' },
-  { key: 'curve_carico', label: 'Curve di carico', desc: 'Portate massime per raggio' },
-  { key: 'stabilita_q', label: 'Stabilità C25-Q', desc: 'Verifica configurazione quadrato' },
-  { key: 'stabilita_d', label: 'Stabilità C25-D', desc: 'Verifica configurazione diagonale' },
-  { key: 'carichi_ralla', label: 'Carichi ralla', desc: 'Carichi su ralla e base' },
-  { key: 'diagramma', label: 'Diagramma carico', desc: 'Diagramma carico/raggio' },
+  { key: 'macchina',      sheet: 'Caratteristiche_macchina',  label: 'Caratteristiche macchina' },
+  { key: 'geometria',     sheet: 'Geometria_braccio',          label: 'Geometria braccio' },
+  { key: 'masse',         sheet: 'Masse_proprie',              label: 'Masse proprie' },
+  { key: 'baricentri',    sheet: 'Baricentri',                 label: 'Baricentri' },
+  { key: 'aree_vento',    sheet: 'A_b',                        label: 'Aree vento - A_b' },
+  { key: 'aree_vento',    sheet: 'A_rc',                       label: 'Aree vento - A_rc' },
+  { key: 'aree_vento',    sheet: 'A_cb',                       label: 'Aree vento - A_cb' },
+  { key: 'aree_vento',    sheet: 'A_Pu',                       label: 'Aree vento - A_Pu' },
+  { key: 'vento',         sheet: 'Vento',                      label: 'Vento' },
+  { key: 'stabilita_q',   sheet: 'Stabilità C25-Q',            label: 'Stabilità C25-Q' },
+  { key: 'stabilita_d',   sheet: 'Stabilità C25-D',            label: 'Stabilità C25-D' },
+  { key: 'carichi_ralla', sheet: 'Carrichi ralla e base - C25',label: 'Carichi ralla' },
+  { key: 'curve_carico',  sheet: 'Curve_di_carico II',         label: 'Curve carico II' },
+  { key: 'curve_carico',  sheet: 'Curve_di_carico II IV',      label: 'Curve carico II/IV' },
+  { key: 'diagramma',     sheet: 'Diagramma di carico',        label: 'Diagramma carico' },
 ];
 
 const MACHINE_CELL_MAP = {
@@ -46,6 +50,7 @@ export default function Verifica() {
   const [editId, setEditId] = useState(null);
   const [editText, setEditText] = useState('');
   const [inputValues, setInputValues] = useState({});
+  const calcTimer = useRef(null);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   useEffect(() => {
@@ -62,14 +67,17 @@ export default function Verifica() {
     }
   }, [projectsList]);
 
-  const stepKey = STEPS[currentStep]?.key;
+  const currentStepDef = STEPS[currentStep];
+  const stepKey = currentStepDef?.key;
+  const stepSheet = currentStepDef?.sheet;
 
-  const loadStep = async (projectId, step) => {
+  const loadStep = async (projectId, idx) => {
+    const sd = STEPS[idx];
     setLoading(true);
     setResults(null);
     setEditId(null);
     try {
-      const res = await formulasApi.list(step);
+      const res = await formulasApi.list({ sheet: sd.sheet });
       setCells(res.data || []);
 
       const newInputs = {};
@@ -100,15 +108,9 @@ export default function Verifica() {
         curvesRes.data.forEach((c, i) => { if (c.carico_kg !== null) newInputs[`R${i + 1}`] = String(c.carico_kg); });
       } catch (e) {}
       try {
-        const windRes = await api.get(`/projects/${projectId}/wind-areas`);
-        windRes.data.forEach((a, i) => { if (a.valore !== null) newInputs[`V${i + 1}`] = String(a.valore); });
-      } catch (e) {}
-      try {
         const geomRes = await api.get(`/projects/${projectId}/geometry`);
         if (Array.isArray(geomRes.data)) {
-          geomRes.data.forEach((g, i) => {
-            if (g.lunghezza !== null) newInputs[`L${i + 16}`] = String(g.lunghezza);
-          });
+          geomRes.data.forEach((g, i) => { if (g.lunghezza !== null) newInputs[`L${i + 16}`] = String(g.lunghezza); });
         }
       } catch (e) {}
 
@@ -116,7 +118,7 @@ export default function Verifica() {
 
       const resR = await api.get(`/projects/${projectId}/risultati`);
       for (const r of resR.data) {
-        if (r.step === step) {
+        if (r.step === sd.key) {
           setResults(typeof r.dati === 'string' ? JSON.parse(r.dati) : r.dati);
         }
       }
@@ -124,97 +126,88 @@ export default function Verifica() {
     setLoading(false);
   };
 
-  const handleProjectSelect = async (projectId) => {
-    setSelectedProject(projectId);
-    setCurrentStep(0);
-    setInputValues({});
-    await loadStep(projectId, STEPS[0].key);
-  };
-
-  const goToStep = async (idx) => {
-    setCurrentStep(idx);
-    setInputValues({});
-    await loadStep(selectedProject, STEPS[idx].key);
-  };
-
-  const handleCalculate = async () => {
-    setCalculating(true);
-    try {
-      if (stepKey === 'macchina' || stepKey === 'baricentri') {
-        const machineData = {};
-        cells.forEach(c => {
-          if (inputValues[c.campo]) {
-            const field = CELL_TO_MACHINE_MAP[c.campo] || c.campo;
-            machineData[field] = parseFloat(inputValues[c.campo]) || 0;
+  const saveStepData = async () => {
+    if (!selectedProject) return;
+    if (stepKey === 'macchina' || stepKey === 'baricentri') {
+      const machineData = {};
+      cells.forEach(c => {
+        if (inputValues[c.campo]) {
+          const field = CELL_TO_MACHINE_MAP[c.campo] || c.campo;
+          machineData[field] = parseFloat(inputValues[c.campo]) || 0;
+        }
+      });
+      if (Object.keys(machineData).length > 0) {
+        await api.put(`/projects/${selectedProject}/machine`, machineData);
+      }
+    }
+    if (['stabilita_q', 'stabilita_d', 'vento', 'carichi_ralla'].includes(stepKey)) {
+      for (const [key, val] of Object.entries(inputValues)) {
+        if (val) {
+          const existing = await api.get(`/projects/${selectedProject}/stability`);
+          const found = existing.data.find(p => p.parametro === key);
+          if (found) {
+            await api.put(`/projects/${selectedProject}/stability/${found.id}`, { valore: parseFloat(val) || 0 });
+          } else {
+            await api.post(`/projects/${selectedProject}/stability`, { parametro: key, valore: parseFloat(val) || 0 });
           }
-        });
-        if (Object.keys(machineData).length > 0) {
-          await api.put(`/projects/${selectedProject}/machine`, machineData);
         }
       }
-      if (['stabilita_q', 'stabilita_d', 'vento', 'carichi_ralla'].includes(stepKey)) {
-        for (const [key, val] of Object.entries(inputValues)) {
-          if (val) {
-            const existing = await api.get(`/projects/${selectedProject}/stability`);
-            const found = existing.data.find(p => p.parametro === key);
-            if (found) {
-              await api.put(`/projects/${selectedProject}/stability/${found.id}`, { valore: parseFloat(val) || 0 });
+    }
+    if (stepKey === 'masse') {
+      const massesData = [];
+      cells.forEach(c => {
+        if (inputValues[c.campo]) {
+          const idx = parseInt(c.campo.match(/\d+/)?.[0] || '1') - 1;
+          if (!massesData[idx]) massesData[idx] = {};
+          if (c.campo.startsWith('Q')) massesData[idx].massa_kg = parseFloat(inputValues[c.campo]) || 0;
+          if (c.campo.startsWith('T')) massesData[idx].braccio_m = parseFloat(inputValues[c.campo]) || 0;
+        }
+      });
+      for (let i = 0; i < massesData.length; i++) {
+        if (massesData[i]) {
+          try {
+            const existing = await api.get(`/projects/${selectedProject}/masses`);
+            if (existing.data[i]) {
+              await api.put(`/projects/${selectedProject}/masses/${existing.data[i].id}`, massesData[i]);
             } else {
-              await api.post(`/projects/${selectedProject}/stability`, { parametro: key, valore: parseFloat(val) || 0 });
-            }
-          }
-        }
-      }
-      if (stepKey === 'masse') {
-        const massesData = [];
-        cells.forEach(c => {
-          if (inputValues[c.campo]) {
-            const idx = parseInt(c.campo.match(/\d+/)?.[0] || '1') - 1;
-            if (!massesData[idx]) massesData[idx] = {};
-            if (c.campo.startsWith('Q')) massesData[idx].massa_kg = parseFloat(inputValues[c.campo]) || 0;
-            if (c.campo.startsWith('T')) massesData[idx].braccio_m = parseFloat(inputValues[c.campo]) || 0;
-          }
-        });
-        for (let i = 0; i < massesData.length; i++) {
-          if (massesData[i]) {
-            try {
-              const existing = await api.get(`/projects/${selectedProject}/masses`);
-              if (existing.data[i]) {
-                await api.put(`/projects/${selectedProject}/masses/${existing.data[i].id}`, massesData[i]);
-              } else {
-                await api.post(`/projects/${selectedProject}/masses`, massesData[i]);
-              }
-            } catch (e) {
               await api.post(`/projects/${selectedProject}/masses`, massesData[i]);
             }
+          } catch (e) {
+            await api.post(`/projects/${selectedProject}/masses`, massesData[i]);
           }
         }
       }
-      if (stepKey === 'curve_carico') {
-        const curvesData = [];
-        cells.forEach(c => {
-          if (inputValues[c.campo] && c.campo.startsWith('R')) {
-            const idx = parseInt(c.campo.match(/\d+/)?.[0] || '1') - 1;
-            if (!curvesData[idx]) curvesData[idx] = {};
-            curvesData[idx].carico_kg = parseFloat(inputValues[c.campo]) || 0;
-          }
-        });
-        for (let i = 0; i < curvesData.length; i++) {
-          if (curvesData[i]) {
-            try {
-              const existing = await api.get(`/projects/${selectedProject}/load-curves`);
-              if (existing.data[i]) {
-                await api.put(`/projects/${selectedProject}/load-curves/${existing.data[i].id}`, curvesData[i]);
-              } else {
-                await api.post(`/projects/${selectedProject}/load-curves`, curvesData[i]);
-              }
-            } catch (e) {
+    }
+    if (stepKey === 'curve_carico') {
+      const curvesData = [];
+      cells.forEach(c => {
+        if (inputValues[c.campo] && c.campo.startsWith('R')) {
+          const idx = parseInt(c.campo.match(/\d+/)?.[0] || '1') - 1;
+          if (!curvesData[idx]) curvesData[idx] = {};
+          curvesData[idx].carico_kg = parseFloat(inputValues[c.campo]) || 0;
+        }
+      });
+      for (let i = 0; i < curvesData.length; i++) {
+        if (curvesData[i]) {
+          try {
+            const existing = await api.get(`/projects/${selectedProject}/load-curves`);
+            if (existing.data[i]) {
+              await api.put(`/projects/${selectedProject}/load-curves/${existing.data[i].id}`, curvesData[i]);
+            } else {
               await api.post(`/projects/${selectedProject}/load-curves`, curvesData[i]);
             }
+          } catch (e) {
+            await api.post(`/projects/${selectedProject}/load-curves`, curvesData[i]);
           }
         }
       }
+    }
+  };
 
+  const recalculate = async () => {
+    if (!selectedProject) return;
+    setCalculating(true);
+    try {
       await api.post(`/projects/${selectedProject}/calcola`);
       const resR = await api.get(`/projects/${selectedProject}/risultati`);
       for (const r of resR.data) {
@@ -223,33 +216,58 @@ export default function Verifica() {
         }
       }
     } catch (err) {
-      alert('Errore: ' + (err.response?.data?.detail || err.message));
+      console.error('Calc error:', err);
     }
     setCalculating(false);
+  };
+
+  const triggerAutoCalc = () => {
+    if (calcTimer.current) clearTimeout(calcTimer.current);
+    calcTimer.current = setTimeout(async () => {
+      try {
+        await saveStepData();
+        await recalculate();
+      } catch (e) {
+        console.error('Auto calc error:', e);
+      }
+    }, 800);
+  };
+
+  const handleProjectSelect = async (projectId) => {
+    setSelectedProject(projectId);
+    setCurrentStep(0);
+    setInputValues({});
+    await loadStep(projectId, 0);
+  };
+
+  const goToStep = async (idx) => {
+    setCurrentStep(idx);
+    setInputValues({});
+    await loadStep(selectedProject, idx);
   };
 
   const saveFormula = async (id, newFormula) => {
     try {
       await formulasApi.update(id, { formula: newFormula });
       setEditId(null);
-      await loadStep(selectedProject, stepKey);
+      await saveStepData();
+      await recalculate();
     } catch (err) { alert('Errore salvataggio formula'); }
   };
 
   const resultsValues = results?.values || {};
 
   const inputs = cells.filter(c => (c.cell_type || 'formula') === 'input');
-  const formulas_count = cells.filter(c => (c.cell_type || 'formula') === 'formula').length;
-  const constants_count = cells.filter(c => (c.cell_type || '') === 'constant').length;
+  const formulaCells = cells.filter(c => (c.cell_type || 'formula') === 'formula');
+  const constants = cells.filter(c => (c.cell_type || '') === 'constant');
 
   return (
     <div>
       <div className="page-header page-header-accent">
         <h1>Verifica calcolo</h1>
-        <p>Step by step: controlla input, formule e risultati come nell'Excel</p>
+        <p>Specchio esatto del file Excel — modifica gli input, i risultati si aggiornano automaticamente</p>
       </div>
 
-      {/* Project selector */}
       <div className="card" style={{ marginBottom: 20, padding: '12px 16px', display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
         <span style={{ fontWeight: 600, fontSize: 13 }}>Progetto:</span>
         <select
@@ -262,18 +280,13 @@ export default function Verifica() {
             <option key={p.id} value={p.id}>{p.name}</option>
           ))}
         </select>
-        {selectedProject && (
-          <button onClick={() => navigate(`/nuovo-progetto/step-1?projectId=${selectedProject}`)}
-            className="btn btn-ghost btn-xs">✏ Modifica input nel wizard</button>
-        )}
       </div>
 
       {selectedProject && (
         <>
-          {/* Step bar (like wizard) */}
           <div className="step-bar" style={{ marginBottom: 24, minWidth: 700, overflowX: 'auto' }}>
             {STEPS.map((s, i) => (
-              <button key={s.key} onClick={() => goToStep(i)}
+              <button key={s.sheet} onClick={() => goToStep(i)}
                 className={`step-item ${i < currentStep ? 'step-done' : i === currentStep ? 'step-current' : 'step-pending'}`}
                 style={{ border: 'none', cursor: 'pointer', textAlign: 'center' }}>
                 {s.label}
@@ -283,15 +296,14 @@ export default function Verifica() {
 
           <div className="flex justify-between items-center flex-wrap gap-3" style={{ marginBottom: 16 }}>
             <div>
-              <span style={{ fontSize: 13, color: 'var(--gray)' }}>{STEPS[currentStep]?.desc}</span>
+              <span style={{ fontSize: 13, color: 'var(--gray)' }}>{stepSheet}</span>
               <span style={{ fontSize: 12, color: '#9ca3af', marginLeft: 12 }}>
-                {cells.length} celle ({inputs.length} input, {formulas_count} formule, {constants_count} costanti)
+                {cells.length} celle ({inputs.length} input, {formulaCells.length} formule, {constants.length} costanti)
               </span>
             </div>
-            <div className="flex gap-2">
-              <button onClick={handleCalculate} disabled={calculating} className="btn btn-dark btn-sm">
-                {calculating ? 'Calcolo...' : '▶ Calcola step'}
-              </button>
+            <div style={{ fontSize: 12, color: calculating ? '#D4A017' : '#6b7280', display: 'flex', alignItems: 'center', gap: 6 }}>
+              {calculating && <span className="spinner" style={{ display: 'inline-block', width: 12, height: 12, border: '2px solid #D4A017', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />}
+              {calculating ? 'Calcolo in corso...' : '✓ Auto-calcolo attivo'}
             </div>
           </div>
 
@@ -299,7 +311,7 @@ export default function Verifica() {
             <div className="card" style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>Caricamento...</div>
           ) : cells.length === 0 ? (
             <div className="card" style={{ textAlign: 'center', padding: 40, color: 'var(--gray)', fontSize: 13 }}>
-              Nessun dato per questo step. Vai su <strong>Impostazioni → Carica Excel</strong> per importare le formule.
+              Nessun dato per questo foglio. Vai su <strong>Impostazioni → Carica Excel</strong> per importare le formule.
             </div>
           ) : (
             <div className="card">
@@ -332,7 +344,7 @@ export default function Verifica() {
                           <th style={{ minWidth: 260 }}>Etichetta</th>
                           <th style={{ minWidth: 90 }}>Valore / Input</th>
                           <th>Dettaglio</th>
-                          <th style={{ width: 75 }}>Risultato</th>
+                          <th style={{ width: 90 }}>Risultato</th>
                           {user.is_admin && <th style={{ width: 30 }}>✏</th>}
                         </tr>
                       </thead>
@@ -340,8 +352,6 @@ export default function Verifica() {
                         {sortedRows.map(([rowNum, rowCells]) => {
                           const labelCells = rowCells.filter(c => c.cell_type === 'label');
                           const valueCells = rowCells.filter(c => c.cell_type !== 'label');
-                          const firstInput = valueCells.find(c => c.cell_type === 'input');
-                          const hasInput = valueCells.some(c => c.cell_type === 'input');
 
                           return valueCells.map((c, ci) => {
                             const isInput = c.cell_type === 'input';
@@ -373,7 +383,7 @@ export default function Verifica() {
                                 )}
                               </td>
                               <td style={{ color: '#374151', fontSize: 12, maxWidth: 350, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={rowLabel}>
-                                {rowLabel}
+                                {rowLabel || c.campo}
                               </td>
                               <td>
                                 {isInput ? (
@@ -384,7 +394,11 @@ export default function Verifica() {
                                       width: '100%', minWidth: 80, maxWidth: 140, padding: '3px 6px', fontSize: 12, fontFamily: 'monospace', fontWeight: 600,
                                       border: '2px solid #0070C0', borderRadius: 4, background: '#F0F7FF', color: '#0070C0', boxSizing: 'border-box',
                                     }}
-                                    onChange={e => { const v = e.target.value; setInputValues({...inputValues, [c.campo]: v}); }} />
+                                    onChange={e => {
+                                      const v = e.target.value;
+                                      setInputValues(prev => ({...prev, [c.campo]: v}));
+                                      triggerAutoCalc();
+                                    }} />
                                 ) : isConst ? (
                                   <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 600, color: '#6b7280', padding: '4px 0' }}>
                                     {c.default_value || c.formula}
@@ -452,7 +466,7 @@ export default function Verifica() {
                 )}
                 <div style={{ flex: 1 }} />
                 <span style={{ fontSize: 11, color: '#9ca3af' }}>
-                  Step {currentStep + 1} di {STEPS.length}
+                  Foglio {currentStep + 1} di {STEPS.length}
                 </span>
               </div>
             </div>

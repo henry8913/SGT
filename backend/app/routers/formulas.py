@@ -23,10 +23,12 @@ def _col_to_number(col):
 
 
 @router.get("", response_model=list[FormulaResponse])
-def list_formulas(step: str | None = None, db: Session = Depends(get_db)):
+def list_formulas(step: str | None = None, sheet: str | None = None, db: Session = Depends(get_db)):
     query = db.query(Formula)
     if step:
         query = query.filter(Formula.step == step)
+    if sheet:
+        query = query.filter(Formula.sheet == sheet)
     return query.order_by(Formula.step, Formula.campo).all()
 
 

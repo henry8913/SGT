@@ -159,6 +159,7 @@ tr:hover td { background: var(--yellow-light); }
   h1 { font-size: clamp(20px, 5vw, 22px); }
   .page-header h1::after { width: 36px; }
 }
+@keyframes spin { to { transform: rotate(360deg); } }
 @media (max-width: 640px) {
   .container { padding: 0 clamp(12px, 4vw, 16px); }
   .page { padding: 16px 0; }
