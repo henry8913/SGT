@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import api, { projects, calculate } from '../api/client';
+import api, { projects, calculate, modules as modulesApi } from '../api/client';
+
+const PROVVISORIO_LABEL = 'Provvisorio — coefficienti di default, non ancora validati dall\'ingegnere';
 
 const STEPS = [
   { key: 'macchina', label: 'Caratteristiche macchina' },
@@ -45,8 +47,17 @@ export default function Verifica() {
   const [windAreas, setWindAreas] = useState([]);
   const [loadCurves, setLoadCurves] = useState([]);
   const [results, setResults] = useState({});
+  const [provvisori, setProvvisori] = useState({});
 
   useEffect(() => { projects.list().then(r => setProjectsList(r.data)).catch(() => {}); }, []);
+
+  useEffect(() => {
+    modulesApi.status().then(r => {
+      const map = {};
+      for (const m of r.data?.modules || []) map[m.key] = m.provvisorio;
+      setProvvisori(map);
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const urlProjectId = searchParams.get('projectId');
@@ -431,6 +442,12 @@ export default function Verifica() {
               {isResultOnly && <span style={{ fontSize: 12, color: hasResult ? '#16a34a' : '#9ca3af', marginLeft: 12 }}>
                 {hasResult ? '✓ risultato calcolato' : 'nessun risultato'}
               </span>}
+              {provvisori[stepKey] && hasResult && (
+                <span className="badge" title={PROVVISORIO_LABEL}
+                  style={{ background: '#D4A017', color: '#fff', marginLeft: 10 }}>
+                  ⚠ Provvisorio
+                </span>
+              )}
             </div>
             <div style={{
               fontSize: 12, display: 'flex', alignItems: 'center', gap: 8,
@@ -443,6 +460,16 @@ export default function Verifica() {
             </div>
             <button onClick={recalculate} className="btn btn-dark btn-sm">⟳ Ricalcola tutti gli step</button>
           </div>
+
+          {provvisori[stepKey] && (
+            <div className="msg" style={{
+              marginBottom: 16, background: '#FFF8E1', border: '1px solid #D4A017',
+              color: '#7c5e10', padding: '10px 14px', borderRadius: 6, fontSize: 13,
+            }}>
+              <strong>⚠ {PROVVISORIO_LABEL}.</strong> L'output di questo step usa valori segnaposto
+              finché l'ingegnere non conferma i coefficienti (pannello Coefficienti / Motore).
+            </div>
+          )}
 
           {loading ? (
             <div className="card" style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>Caricamento...</div>

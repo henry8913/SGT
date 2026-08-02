@@ -10,5 +10,6 @@ export {
   loadCurves,
   coefficients,
   moduleDocs,
+  modules,
   calculate,
 } from './client';

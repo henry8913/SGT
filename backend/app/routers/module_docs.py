@@ -6,7 +6,9 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.engine.module_docs import MODULE_DOCS
+from app.engine.status import get_module_status
 from app.models.coefficient import Coefficient
+from app.models.module_confirm import ModuleConfirm
 from app.models.module_note import ModuleNote
 from app.models.user import User
 from app.routers.auth import get_current_admin
@@ -40,6 +42,8 @@ def get_module_docs(db: Session = Depends(get_db), _admin: User = Depends(get_cu
     notes = db.query(ModuleNote).all()
     notes_map = {(n.modulo, n.campo): n for n in notes}
 
+    status = get_module_status(db)
+
     modules = []
     for key in MODULE_ORDER:
         doc = MODULE_DOCS.get(key)
@@ -68,10 +72,32 @@ def get_module_docs(db: Session = Depends(get_db), _admin: User = Depends(get_cu
             "nome": doc["nome"],
             "file": doc["file"],
             "descrizione": doc["descrizione"],
+            "confermato": status.get(key, {}).get("confermato", False),
+            "provvisorio": status.get(key, {}).get("provvisorio", True),
             "campi": campi,
         })
 
     return {"modules": modules}
+
+
+@router.post("/{modulo}/conferma")
+def conferma_modulo(
+    modulo: str,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_admin),
+):
+    if modulo not in MODULE_DOCS:
+        raise HTTPException(status_code=404, detail="Modulo sconosciuto")
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    confirm = db.query(ModuleConfirm).filter(ModuleConfirm.modulo == modulo).first()
+    if confirm:
+        confirm.confermato_da = admin.username
+        confirm.confermato_il = now
+    else:
+        confirm = ModuleConfirm(modulo=modulo, confermato_da=admin.username, confermato_il=now)
+        db.add(confirm)
+    db.commit()
+    return {"status": "ok", "modulo": modulo, "confermato": True}
 
 
 @router.put("/notes")

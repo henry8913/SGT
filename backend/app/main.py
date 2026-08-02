@@ -4,13 +4,15 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 
 from app.database import Base, engine
 from app.migrations import run_migrations
-from app.routers import auth, calculate, coefficients, geometry, load_curves, machine, masses, module_docs, profiles, projects, stability, wind_areas
+from app.routers import auth, calculate, coefficients, geometry, load_curves, machine, masses, module_docs, modules, profiles, projects, stability, wind_areas
 
 # Ensure new tables/models are registered before create_all
 from app.models.beam_profile import BeamProfile
 from app.models.unit_conversion import UnitConversion
 from app.models.coefficient import Coefficient
 from app.models.module_note import ModuleNote
+from app.models.module_confirm import ModuleConfirm
+from app.models.test_case import TestCase
 
 Base.metadata.create_all(bind=engine)
 run_migrations(engine)
@@ -40,6 +42,7 @@ app.include_router(load_curves.router)
 app.include_router(profiles.router)
 app.include_router(coefficients.router)
 app.include_router(module_docs.router)
+app.include_router(modules.router)
 app.include_router(calculate.router)
 
 

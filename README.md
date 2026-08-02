@@ -56,6 +56,25 @@ docker compose down
 
 ---
 
+## Backup automatico del database
+
+Il servizio `backup` del docker-compose copia ogni ora il database SQLite
+(con backup online sicuro, `sqlite3.backup`) nel volume `sgt_backups`,
+mantenendo le ultime 30 copie (`sgt_YYYYMMDD_HHMMSS.db`).
+
+Comandi utili sul server:
+
+```bash
+# elenco backup disponibili
+docker run --rm -v sgt_backups:/backups -w /backups alpine ls -la
+
+# ripristino da una copia (esempio)
+docker run --rm -v sgt_data:/data -v sgt_backups:/backups alpine sh -c \
+  "cp /backups/sgt_<timestamp>.db /data/sgt.db"
+```
+
+---
+
 ## Accessi
 
 - Frontend: http://localhost:80

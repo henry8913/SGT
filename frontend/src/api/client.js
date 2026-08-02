@@ -91,6 +91,11 @@ export const coefficients = {
 export const moduleDocs = {
   get: () => api.get('/module-docs'),
   saveNote: (data) => api.put('/module-docs/notes', data),
+  conferma: (modulo) => api.post(`/module-docs/${modulo}/conferma`),
+};
+
+export const modules = {
+  status: () => api.get('/modules/status'),
 };
 
 export const calculate = {

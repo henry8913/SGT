@@ -11,6 +11,8 @@ from app.models.beam_profile import BeamProfile
 from app.models.unit_conversion import UnitConversion
 from app.models.coefficient import Coefficient
 from app.models.module_note import ModuleNote
+from app.models.module_confirm import ModuleConfirm
+from app.models.test_case import TestCase
 
 __all__ = [
     "Project",
@@ -26,4 +28,6 @@ __all__ = [
     "UnitConversion",
     "Coefficient",
     "ModuleNote",
+    "ModuleConfirm",
+    "TestCase",
 ]

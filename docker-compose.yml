@@ -25,5 +25,21 @@ services:
     depends_on:
       - backend
 
+  # Backup automatico del DB di produzione (ogni ora, mantiene le ultime 30 copie)
+  backup:
+    image: python:3.12-slim
+    restart: unless-stopped
+    volumes:
+      - sgt_data:/app/data:ro
+      - sgt_backups:/backups
+      - ./backend/backup.py:/backup.py:ro
+    environment:
+      - DB_PATH=/app/data/sgt.db
+      - BACKUP_DIR=/backups
+      - KEEP=30
+    command: >
+      sh -c "while true; do python /backup.py; sleep 3600; done"
+
 volumes:
   sgt_data:
+  sgt_backups:

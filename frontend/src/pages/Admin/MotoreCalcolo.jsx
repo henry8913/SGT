@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { moduleDocs } from '../../api/client';
 
+const PROVVISORIO_LABEL = 'Provvisorio — coefficienti di default, non ancora validati dall\'ingegnere';
+
 export default function MotoreCalcolo() {
   const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,6 +40,18 @@ export default function MotoreCalcolo() {
     }
   };
 
+  const confermaModulo = async (modulo) => {
+    if (!window.confirm(`Confermare il modulo "${modulo}" come validato dall'ingegnere?`)) return;
+    try {
+      await moduleDocs.conferma(modulo);
+      setSaved('✓ Modulo confermato: i risultati non saranno più provvisori');
+      setTimeout(() => setSaved(''), 2500);
+      await load();
+    } catch (err) {
+      setSaved('✗ Errore nella conferma');
+    }
+  };
+
   return (
     <div>
       <div className="page-header page-header-accent">
@@ -62,7 +76,17 @@ export default function MotoreCalcolo() {
         <div className="card" style={{ marginBottom: 24 }} key={m.key}>
           <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
             <span style={{ fontWeight: 700 }}>{m.nome}</span>
-            <code style={{ fontSize: 11, color: 'var(--steel-light)', fontFamily: 'monospace' }}>{m.file}</code>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              {m.confermato ? (
+                <span className="badge" style={{ background: '#16a34a', color: '#fff' }}>✓ Confermato</span>
+              ) : (
+                <>
+                  <span className="badge" title={PROVVISORIO_LABEL} style={{ background: '#D4A017', color: '#fff' }}>⚠ Provvisorio</span>
+                  <button onClick={() => confermaModulo(m.key)} className="btn btn-xs btn-dark">Conferma modulo</button>
+                </>
+              )}
+              <code style={{ fontSize: 11, color: 'var(--steel-light)', fontFamily: 'monospace' }}>{m.file}</code>
+            </div>
           </div>
           <div className="card-body">
             <p style={{ color: '#6b7280', fontSize: 13, marginBottom: 16 }}>{m.descrizione}</p>

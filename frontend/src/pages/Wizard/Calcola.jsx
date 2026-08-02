@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { calculate } from '../../api/client';
+import { calculate, modules as modulesApi } from '../../api/client';
+
+const PROVVISORIO_LABEL = 'Provvisorio — coefficienti di default, non ancora validati dall\'ingegnere';
 
 export default function Calcola() {
   const [searchParams] = useSearchParams();
@@ -8,6 +10,7 @@ export default function Calcola() {
   const projectId = searchParams.get('projectId');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
+  const [provvisori, setProvvisori] = useState([]);
   const [error, setError] = useState('');
 
   const runCalculation = async () => {
@@ -16,6 +19,11 @@ export default function Calcola() {
     try {
       const res = await calculate.run(projectId);
       setResult(res.data);
+      try {
+        const st = await modulesApi.status();
+        const prov = (st.data?.modules || []).filter(m => m.provvisorio).map(m => m.key);
+        setProvvisori(prov);
+      } catch (e) { /* status non disponibile */ }
     } catch (err) {
       setError(err.response?.data?.detail || 'Errore durante il calcolo');
     }
@@ -54,6 +62,17 @@ export default function Calcola() {
           <div className="msg msg-success">
             Calcolo completato! {result.steps_completed?.length || 0} step eseguiti.
           </div>
+
+          {provvisori.length > 0 && (
+            <div className="msg" style={{
+              background: '#FFF8E1', border: '1px solid #D4A017', color: '#7c5e10',
+            }}>
+              <strong>⚠ {PROVVISORIO_LABEL}.</strong> I seguenti moduli usano ancora valori
+              segnaposto: <strong>{provvisori.join(', ')}</strong>. L'output non è da considerarsi
+              definitivo finché l'ingegnere non conferma i coefficienti.
+            </div>
+          )}
+
           <div className="flex gap-3 flex-wrap">
             <button onClick={() => navigate(`/progetto/${projectId}/stabilita`)} className="btn btn-yellow">
               Dashboard Stabilità
