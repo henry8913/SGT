@@ -5,11 +5,11 @@ from app.models.masses import Mass
 from app.models.wind_areas import WindArea
 from app.models.stability import StabilityParam
 from app.models.load_curves import LoadCurve
-from app.models.formulas import Formula
 from app.models.results import Result
 from app.models.user import User
 from app.models.beam_profile import BeamProfile
 from app.models.unit_conversion import UnitConversion
+from app.models.coefficient import Coefficient
 
 __all__ = [
     "Project",
@@ -19,9 +19,9 @@ __all__ = [
     "WindArea",
     "StabilityParam",
     "LoadCurve",
-    "Formula",
     "Result",
     "User",
     "BeamProfile",
     "UnitConversion",
+    "Coefficient",
 ]

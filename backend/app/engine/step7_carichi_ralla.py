@@ -1,13 +1,14 @@
 """
-Step 7: Carichi Ralla e Base (Slew Ring and Base Loads)
+Step 7: Carichi Ralla e Base (verifica V, Mr, Mw, Mtot, T)
 
-Calculates loads on the slew ring and base.
-Based on the Excel 'Carichi ralla e base - C25' sheet.
+I valori di riferimento sono coefficienti configurabili (modulo "carichi_ralla").
 """
 
 from dataclasses import dataclass
 
 from sqlalchemy.orm import Session
+
+from app.engine.coefficients import get_coefficients
 
 
 @dataclass
@@ -33,13 +34,16 @@ def calculate_carichi_ralla(
     stab_d: dict,
     wind: dict,
 ) -> CarichiRallaResult:
+    c = get_coefficients(db, "carichi_ralla")
+    v = c.get("peso_proprio", 55000.0)
+    mr = c.get("momento_stabilizzante", 280000.0)
+    mw = c.get("momento_vento", 90000.0)
+    coeff_attrito = c.get("coefficiente_attrito", 0.22)
+
     conditions = []
     for cid in ["P01", "P02", "P03"]:
-        v = 55000.0
-        mr = 280000.0
-        mw = 90000.0
         mtot = mr + mw
-        t = v * 0.22
+        t = v * coeff_attrito
         ratio = mtot / (mr + 1.0) if mr > 0 else 0.0
 
         conditions.append(RallaCondition(

@@ -4,11 +4,12 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 
 from app.database import Base, engine
 from app.migrations import run_migrations
-from app.routers import auth, calculate, formulas, geometry, load_curves, machine, masses, profiles, projects, stability, wind_areas
+from app.routers import auth, calculate, coefficients, geometry, load_curves, machine, masses, profiles, projects, stability, wind_areas
 
 # Ensure new tables/models are registered before create_all
 from app.models.beam_profile import BeamProfile
 from app.models.unit_conversion import UnitConversion
+from app.models.coefficient import Coefficient
 
 Base.metadata.create_all(bind=engine)
 run_migrations(engine)
@@ -16,7 +17,7 @@ run_migrations(engine)
 app = FastAPI(
     title="SGT - Stabilità delle Gru a Torre",
     description="API per il calcolo di stabilità delle gru a torre KG 26.5",
-    version="0.11",
+    version="0.12",
 )
 
 app.add_middleware(
@@ -36,10 +37,10 @@ app.include_router(wind_areas.router)
 app.include_router(stability.router)
 app.include_router(load_curves.router)
 app.include_router(profiles.router)
-app.include_router(formulas.router)
+app.include_router(coefficients.router)
 app.include_router(calculate.router)
 
 
 @app.get("/api/health")
 def health():
-    return {"status": "ok", "version": "0.11"}
+    return {"status": "ok", "version": "0.12"}

@@ -1,13 +1,14 @@
 """
-Step 6: Stabilità C25-D (Stability in Diagonal Configuration)
+Step 6: Stabilità C25-D (verifica in configurazione diagonale)
 
-Calculates stability coefficients for the diagonal (diagonale) configuration.
-Based on the Excel 'Stabilità C25-D' sheet.
+I coefficienti numerici (modulo "stabilita_d") sono configurabili dal pannello.
 """
 
 from dataclasses import dataclass
 
 from sqlalchemy.orm import Session
+
+from app.engine.coefficients import get_coefficients
 
 
 @dataclass
@@ -19,17 +20,20 @@ class StabilityDResult:
 def calculate_stabilita_d(project_id: int, db: Session, stab_q: dict, baricentri: dict, wind: dict) -> StabilityDResult:
     from app.engine.step5_stabilita_q import StabilityCondition
 
-    conditions = []
-    condition_ids = [f"P{i:02d}" for i in range(1, 13)]
+    c = get_coefficients(db, "stabilita_d")
+    v = c.get("peso_proprio", 45000.0)
+    mr = c.get("momento_stabilizzante", 220000.0)
+    mw = c.get("momento_vento", 75000.0)
+    coeff_attrito = c.get("coefficiente_attrito", 0.18)
+    soglia = c.get("soglia_sicurezza", 1.1)
 
-    for cid in condition_ids:
-        v = 45000.0
-        mr = 220000.0
-        mw = 75000.0
+    conditions = []
+    for i in range(1, 13):
+        cid = f"P{i:02d}"
         mtot = mr + mw
-        t = v * 0.18
+        t = v * coeff_attrito
         sc = v / (mw + 1.0) if (mw + 1.0) > 0 else 99.0
-        esito = "OK" if sc >= 1.1 else "KO"
+        esito = "OK" if sc >= soglia else "KO"
 
         conditions.append(StabilityCondition(
             condition_id=cid,

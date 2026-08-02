@@ -5,7 +5,7 @@ from sqlalchemy import inspect, text
 
 def run_migrations(engine):
     _migrate_beam_profiles(engine)
-    _migrate_formulas(engine)
+    _drop_formulas_table(engine)
 
 
 def _migrate_beam_profiles(engine):
@@ -30,18 +30,16 @@ def _migrate_beam_profiles(engine):
         print(f"[Migration] Note: {e}")
 
 
-def _migrate_formulas(engine):
+def _drop_formulas_table(engine):
+    """La tabella `formulas` (celle importate dall'Excel) non esiste più:
+    il motore usa i moduli Python e i coefficienti."""
     try:
         inspector = inspect(engine)
-        columns = [c['name'] for c in inspector.get_columns('formulas')]
+        if 'formulas' not in inspector.get_table_names():
+            return
         with engine.connect() as conn:
-            if 'cell_type' not in columns:
-                conn.execute(text("ALTER TABLE formulas ADD COLUMN cell_type VARCHAR(20) DEFAULT 'formula'"))
-                conn.commit()
-                print("[Migration] Added cell_type column to formulas")
-            if 'default_value' not in columns:
-                conn.execute(text("ALTER TABLE formulas ADD COLUMN default_value VARCHAR(100)"))
-                conn.commit()
-                print("[Migration] Added default_value column to formulas")
+            conn.execute(text("DROP TABLE IF EXISTS formulas"))
+            conn.commit()
+            print("[Migration] Dropped formulas table")
     except Exception as e:
         print(f"[Migration] Note: {e}")

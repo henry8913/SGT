@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.database import Base, SessionLocal, engine
 from app.models.beam_profile import BeamProfile
-from app.models.formulas import Formula
+from app.models.coefficient import Coefficient
 from app.models.user import User
 
 
@@ -39,47 +39,73 @@ def seed_database():
             print(f"Created admin user ({admin_username})")
         db.commit()
 
-    if db.query(Formula).count() == 0:
-        import os
-        json_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "formulas_seed.json")
-        if os.path.exists(json_path):
-            with open(json_path) as f:
-                all_formulas_data = json.load(f)
-            all_formulas = [Formula(**fd) for fd in all_formulas_data]
-            for f in all_formulas:
-                db.add(f)
-            db.commit()
-            print(f"Inserted {len(all_formulas)} formulas from formulas_seed.json")
-        else:
-            print("formulas_seed.json not found, seeding default formulas...")
-            all_formulas = [
-                Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S3", label="Escursione massima del carico utile", formula="65", default_value="65", cell_type="input"),
-                Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S4", label="Carico utile massimo in punta braccio con tiro in II, Pta", formula="1800", default_value="1800", cell_type="input"),
-                Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S10", label="Altezza massima libera sotto gancio", formula="70", default_value="70", cell_type="input"),
-                Formula(step="macchina", sheet="Caratteristiche_macchina", campo="S14", label="Derivata 0: Escursione massima del carico utile", formula="S3", dipende_da=json.dumps(["S3"]), cell_type="formula"),
-                Formula(step="baricentri", sheet="Baricentri", campo="AC29", label="Momento statico braccio", formula="Masse_proprie.Q52 * Macchina.S14", dipende_da=json.dumps(["Masse_proprie.Q52", "Macchina.S14"])),
-                Formula(step="baricentri", sheet="Baricentri", campo="AD29", label="Coordinata X baricentro", formula="AC29 / Masse_proprie.Q52", dipende_da=json.dumps(["AC29", "Masse_proprie.Q52"])),
-                Formula(step="stabilita_q", sheet="Stabilità C25-Q", campo="AO4", label="Sbraccio", formula="Macchina.S14", dipende_da=json.dumps(["Macchina.S14"])),
-                Formula(step="stabilita_q", sheet="Stabilità C25-Q", campo="AS4", label="Momento ribaltante", formula="(AP4 + AQ4) * AO4 + AR4 * Macchina.S10", dipende_da=json.dumps(["AP4", "AQ4", "AO4", "AR4", "Macchina.S10"])),
-                Formula(step="stabilita_q", sheet="Stabilità C25-Q", campo="AU4", label="Coefficiente sicurezza", formula="AT4 / AS4", dipende_da=json.dumps(["AT4", "AS4"])),
-                Formula(step="stabilita_q", sheet="Stabilità C25-Q", campo="AV4", label="Esito", formula="IF(AU4 >= J30, 1, 0)", dipende_da=json.dumps(["AU4", "Stabilità.J30"])),
-                Formula(step="stabilita_d", sheet="Stabilità C25-D", campo="BP4", label="Sbraccio diagonale", formula="Macchina.S14 * 0.707", dipende_da=json.dumps(["Macchina.S14"])),
-                Formula(step="stabilita_d", sheet="Stabilità C25-D", campo="BT4", label="Coefficiente sicurezza diagonale", formula="BS4 / BR4", dipende_da=json.dumps(["BS4", "BR4"])),
-                Formula(step="stabilita_d", sheet="Stabilità C25-D", campo="BU4", label="Esito diagonale", formula="IF(BT4 >= J30, 1, 0)", dipende_da=json.dumps(["BT4", "Stabilità.J30"])),
-                Formula(step="carichi_ralla", sheet="Carichi ralla e base - C25", campo="CA4", label="Carico verticale ralla", formula="AP4 + AQ4 + J38", dipende_da=json.dumps(["AP4", "AQ4", "Stabilità.J38"])),
-                Formula(step="carichi_ralla", sheet="Carichi ralla e base - C25", campo="CE4", label="Trazione ralla", formula="CA4 * 0.2", dipende_da=json.dumps(["CA4"])),
-            ]
-            for f in all_formulas:
-                db.add(f)
-            db.commit()
-            print(f"Inserted {len(all_formulas)} default formulas")
-
+    _seed_coefficients(db)
     _seed_beam_profiles(db)
     _seed_unit_conversions(db)
 
     _precalc_default_results(db)
     db.close()
     print("Database seeded successfully!")
+
+
+DEFAULT_COEFFICIENTS = [
+    # Vento
+    {"modulo": "vento", "nome": "q_riferimento", "descrizione": "Pressione del vento di riferimento (kg/m²)", "valore": 50.0},
+    {"modulo": "vento", "nome": "fattore_h20", "descrizione": "Fattore pressione vento fino a 20 m", "valore": 1.0},
+    {"modulo": "vento", "nome": "fattore_h50", "descrizione": "Fattore pressione vento a 50 m", "valore": 1.2},
+    {"modulo": "vento", "nome": "fattore_h100", "descrizione": "Fattore pressione vento a 100 m", "valore": 1.5},
+    {"modulo": "vento", "nome": "fattore_momento_braccio", "descrizione": "Fattore per il momento del vento sul braccio", "valore": 0.5},
+    # Stabilità C25-Q
+    {"modulo": "stabilita_q", "nome": "peso_proprio", "descrizione": "Peso proprio della gru (kg)", "valore": 50000.0},
+    {"modulo": "stabilita_q", "nome": "momento_stabilizzante", "descrizione": "Momento stabilizzante Mr (kgm)", "valore": 250000.0},
+    {"modulo": "stabilita_q", "nome": "momento_vento", "descrizione": "Momento del vento Mw (kgm)", "valore": 80000.0},
+    {"modulo": "stabilita_q", "nome": "coefficiente_attrito", "descrizione": "Coefficiente di attrito (T = V × coeff)", "valore": 0.2},
+    {"modulo": "stabilita_q", "nome": "soglia_sicurezza", "descrizione": "Coefficiente di sicurezza minimo richiesto", "valore": 1.1},
+    # Stabilità C25-D
+    {"modulo": "stabilita_d", "nome": "peso_proprio", "descrizione": "Peso proprio della gru in configurazione diagonale (kg)", "valore": 45000.0},
+    {"modulo": "stabilita_d", "nome": "momento_stabilizzante", "descrizione": "Momento stabilizzante Mr (kgm)", "valore": 220000.0},
+    {"modulo": "stabilita_d", "nome": "momento_vento", "descrizione": "Momento del vento Mw (kgm)", "valore": 75000.0},
+    {"modulo": "stabilita_d", "nome": "coefficiente_attrito", "descrizione": "Coefficiente di attrito (T = V × coeff)", "valore": 0.18},
+    {"modulo": "stabilita_d", "nome": "soglia_sicurezza", "descrizione": "Coefficiente di sicurezza minimo richiesto", "valore": 1.1},
+    # Carichi ralla
+    {"modulo": "carichi_ralla", "nome": "peso_proprio", "descrizione": "Peso proprio per la verifica ralla (kg)", "valore": 55000.0},
+    {"modulo": "carichi_ralla", "nome": "momento_stabilizzante", "descrizione": "Momento stabilizzante Mr (kgm)", "valore": 280000.0},
+    {"modulo": "carichi_ralla", "nome": "momento_vento", "descrizione": "Momento del vento Mw (kgm)", "valore": 90000.0},
+    {"modulo": "carichi_ralla", "nome": "coefficiente_attrito", "descrizione": "Coefficiente di attrito (T = V × coeff)", "valore": 0.22},
+    # Diagramma di carico
+    {"modulo": "diagramma", "nome": "raggio_max", "descrizione": "Raggio massimo del braccio (m)", "valore": 65.0},
+    {"modulo": "diagramma", "nome": "coefficiente_riduzione_raggio", "descrizione": "Coefficiente di riduzione del carico col raggio", "valore": 0.3},
+    {"modulo": "diagramma", "nome": "massa_max", "descrizione": "Massa totale massima per la riduzione (kg)", "valore": 100000.0},
+    {"modulo": "diagramma", "nome": "fattore_minimo", "descrizione": "Fattore minimo di riduzione", "valore": 0.5},
+]
+
+
+def _seed_coefficients(db):
+    existing = db.query(Coefficient).all()
+    by_key = {(c.modulo, c.nome): c for c in existing}
+    seen = set()
+    for dc in DEFAULT_COEFFICIENTS:
+        key = (dc["modulo"], dc["nome"])
+        seen.add(key)
+        coeff = by_key.get(key)
+        if coeff:
+            if coeff.valore_pubblicato is None:
+                coeff.valore_pubblicato = dc["valore"]
+            if not coeff.descrizione:
+                coeff.descrizione = dc.get("descrizione")
+        else:
+            db.add(Coefficient(
+                modulo=dc["modulo"],
+                nome=dc["nome"],
+                descrizione=dc.get("descrizione"),
+                valore_pubblicato=dc["valore"],
+                valore_bozza=None,
+            ))
+    for key, coeff in by_key.items():
+        if key not in seen:
+            db.delete(coeff)
+    db.commit()
+    print(f"Coefficients seeded ({len(DEFAULT_COEFFICIENTS)} coefficienti)")
 
 
 def _seed_beam_profiles(db):
@@ -187,7 +213,7 @@ def _precalc_default_results(db):
             db.add(StabilityParam(project_id=9999, parametro=param, valore=val, descrizione=label))
         db.commit()
     if db.query(WindArea).filter(WindArea.project_id == 9999).count() == 0:
-        for parte in ["b", "rc", "cb", "Pu"]:
+        for parte in ["braccio", "rotazione", "controbraccio", "carico"]:
             for i in range(1, 6):
                 db.add(WindArea(project_id=9999, parte=parte, parametro=f"V{i}", valore=1.0 + (i * 0.2), coordinata_x=0.0, coordinata_y=0.0))
         db.commit()
