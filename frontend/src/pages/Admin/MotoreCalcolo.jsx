@@ -1,14 +1,21 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { moduleDocs } from '../../api/client';
 
 const PROVVISORIO_LABEL = 'Provvisorio — coefficienti di default, non ancora validati dall\'ingegnere';
 
+const MODULES = ['baricentri', 'aree_vento', 'vento', 'stabilita_q', 'stabilita_d', 'curve_carico', 'carichi_ralla', 'diagramma'];
+
 export default function MotoreCalcolo() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState({});
   const [saved, setSaved] = useState('');
+
+  const [moduloFilter, setModuloFilter] = useState(searchParams.get('modulo') || '');
+  const [statoFilter, setStatoFilter] = useState(searchParams.get('stato') || 'tutti');
+  const [q, setQ] = useState(searchParams.get('q') || '');
 
   const load = async () => {
     setLoading(true);
@@ -29,6 +36,40 @@ export default function MotoreCalcolo() {
   };
 
   useEffect(() => { load(); }, []);
+
+  useEffect(() => {
+    const p = {};
+    if (moduloFilter) p.modulo = moduloFilter;
+    if (statoFilter && statoFilter !== 'tutti') p.stato = statoFilter;
+    if (q) p.q = q;
+    setSearchParams(p, { replace: true });
+  }, [moduloFilter, statoFilter, q]);
+
+  const resetFilters = () => {
+    setModuloFilter('');
+    setStatoFilter('tutti');
+    setQ('');
+    setSearchParams({}, { replace: true });
+  };
+
+  const matchesModulo = (m) => (!moduloFilter || m.key === moduloFilter);
+  const matchesStato = (m) => (
+    statoFilter === 'tutti' ||
+    (statoFilter === 'provvisori' && !m.confermato) ||
+    (statoFilter === 'confermati' && m.confermato)
+  );
+  const matchesQ = (c) => {
+    if (!q) return true;
+    const needle = q.toLowerCase();
+    return `${c.campo} ${c.formula}`.toLowerCase().includes(needle);
+  };
+
+  const filteredModules = modules.filter(m => {
+    if (!matchesModulo(m) || !matchesStato(m)) return false;
+    return m.campi.some(matchesQ);
+  });
+  const visibleCampi = (m) => m.campi.filter(matchesQ);
+  const totalCampi = modules.reduce((acc, m) => acc + m.campi.length, 0);
 
   const saveNote = async (modulo, campo) => {
     try {
@@ -52,6 +93,8 @@ export default function MotoreCalcolo() {
     }
   };
 
+  const selectStyle = { width: 'auto', minWidth: 150, background: '#fff', padding: '6px 10px' };
+
   return (
     <div>
       <div className="page-header page-header-accent">
@@ -66,13 +109,35 @@ export default function MotoreCalcolo() {
         libera per segnalare correzioni allo sviluppatore. Le correzioni vere si fanno sempre nel codice.
       </div>
 
+      <div className="card" style={{ marginBottom: 16, padding: '12px 16px' }}>
+        <div className="flex gap-3 flex-wrap" style={{ alignItems: 'center' }}>
+          <select value={moduloFilter} onChange={e => setModuloFilter(e.target.value)} style={selectStyle}>
+            <option value="">Tutti i moduli</option>
+            {MODULES.map(m => <option key={m} value={m}>{m}</option>)}
+          </select>
+          <select value={statoFilter} onChange={e => setStatoFilter(e.target.value)} style={selectStyle}>
+            <option value="tutti">Tutti gli stati</option>
+            <option value="provvisori">Provvisori (⚠)</option>
+            <option value="confermati">Confermati</option>
+          </select>
+          <input type="text" value={q} onChange={e => setQ(e.target.value)}
+            placeholder="Cerca campo o formula..." style={{ flex: 1, minWidth: 200, background: '#fff' }} />
+          <span style={{ fontSize: 12, color: 'var(--gray)', whiteSpace: 'nowrap' }}>
+            {filteredModules.length} moduli · {totalCampi} campi
+          </span>
+          {(moduloFilter || statoFilter !== 'tutti' || q) && (
+            <button onClick={resetFilters} className="btn btn-ghost btn-sm">Azzera filtri</button>
+          )}
+        </div>
+      </div>
+
       {saved && <div className="msg" style={{ marginBottom: 16, background: '#F0FDF4', border: '1px solid #BBF7D0', color: '#15803D', padding: '10px 14px', borderRadius: 6, fontSize: 13 }}>{saved}</div>}
 
       {loading ? (
         <div className="card" style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>Caricamento...</div>
-      ) : modules.length === 0 ? (
-        <div className="card" style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>Nessun modulo documentato.</div>
-      ) : modules.map(m => (
+      ) : filteredModules.length === 0 ? (
+        <div className="card" style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>Nessun modulo corrisponde ai filtri.</div>
+      ) : filteredModules.map(m => (
         <div className="card" style={{ marginBottom: 24 }} key={m.key}>
           <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
             <span style={{ fontWeight: 700 }}>{m.nome}</span>
@@ -101,7 +166,7 @@ export default function MotoreCalcolo() {
                   </tr>
                 </thead>
                 <tbody>
-                  {m.campi.map(c => (
+                  {visibleCampi(m).map(c => (
                     <tr key={c.campo}>
                       <td style={{ fontWeight: 600, fontFamily: 'monospace', fontSize: 12 }}>{c.campo}</td>
                       <td>

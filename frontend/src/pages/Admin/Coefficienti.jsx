@@ -1,13 +1,21 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { coefficients as coeffApi } from '../../api/client';
 
+const MODULES = ['baricentri', 'aree_vento', 'vento', 'stabilita_q', 'stabilita_d', 'curve_carico', 'carichi_ralla', 'diagramma'];
+
 export default function Coefficienti() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [drafts, setDrafts] = useState({});
   const [msg, setMsg] = useState('');
   const [showNew, setShowNew] = useState(false);
   const [newCoeff, setNewCoeff] = useState({ modulo: '', nome: '', descrizione: '', valore: '' });
+
+  const [moduloFilter, setModuloFilter] = useState(searchParams.get('modulo') || '');
+  const [statoFilter, setStatoFilter] = useState(searchParams.get('stato') || 'tutti');
+  const [q, setQ] = useState(searchParams.get('q') || '');
 
   const load = async () => {
     setLoading(true);
@@ -22,7 +30,36 @@ export default function Coefficienti() {
 
   useEffect(() => { load(); }, []);
 
-  const moduli = [...new Set(items.map(c => c.modulo))].sort();
+  useEffect(() => {
+    const p = {};
+    if (moduloFilter) p.modulo = moduloFilter;
+    if (statoFilter && statoFilter !== 'tutti') p.stato = statoFilter;
+    if (q) p.q = q;
+    setSearchParams(p, { replace: true });
+  }, [moduloFilter, statoFilter, q]);
+
+  const resetFilters = () => {
+    setModuloFilter('');
+    setStatoFilter('tutti');
+    setQ('');
+    setSearchParams({}, { replace: true });
+  };
+
+  const isDraft = (c) => c.valore_bozza !== null && c.valore_bozza !== undefined;
+
+  const filteredItems = items.filter(c => {
+    if (moduloFilter && c.modulo !== moduloFilter) return false;
+    if (statoFilter === 'bozza' && !isDraft(c)) return false;
+    if (statoFilter === 'pubblicati' && isDraft(c)) return false;
+    if (q) {
+      const needle = q.toLowerCase();
+      const hay = `${c.nome} ${c.descrizione || ''} ${c.modulo}`.toLowerCase();
+      if (!hay.includes(needle)) return false;
+    }
+    return true;
+  });
+
+  const filteredModuli = [...new Set(filteredItems.map(c => c.modulo))];
 
   const saveDraft = async (id) => {
     const raw = drafts[id];
@@ -76,7 +113,7 @@ export default function Coefficienti() {
     }
   };
 
-  const isDraft = (c) => c.valore_bozza !== null && c.valore_bozza !== undefined;
+  const selectStyle = { width: 'auto', minWidth: 150, background: '#fff', padding: '6px 10px' };
 
   return (
     <div>
@@ -90,6 +127,28 @@ export default function Coefficienti() {
           {msg}
         </div>
       )}
+
+      <div className="card" style={{ marginBottom: 16, padding: '12px 16px' }}>
+        <div className="flex gap-3 flex-wrap" style={{ alignItems: 'center' }}>
+          <select value={moduloFilter} onChange={e => setModuloFilter(e.target.value)} style={selectStyle}>
+            <option value="">Tutti i moduli</option>
+            {MODULES.map(m => <option key={m} value={m}>{m}</option>)}
+          </select>
+          <select value={statoFilter} onChange={e => setStatoFilter(e.target.value)} style={selectStyle}>
+            <option value="tutti">Tutti gli stati</option>
+            <option value="bozza">Con bozza da pubblicare</option>
+            <option value="pubblicati">Pubblicati</option>
+          </select>
+          <input type="text" value={q} onChange={e => setQ(e.target.value)}
+            placeholder="Cerca nome o descrizione..." style={{ flex: 1, minWidth: 200, background: '#fff' }} />
+          <span style={{ fontSize: 12, color: 'var(--gray)', whiteSpace: 'nowrap' }}>
+            {filteredItems.length} risultati
+          </span>
+          {(moduloFilter || statoFilter !== 'tutti' || q) && (
+            <button onClick={resetFilters} className="btn btn-ghost btn-sm">Azzera filtri</button>
+          )}
+        </div>
+      </div>
 
       <div className="flex justify-between items-center" style={{ marginBottom: 16 }}>
         <button onClick={() => setShowNew(!showNew)} className="btn btn-dark btn-sm">
@@ -117,9 +176,9 @@ export default function Coefficienti() {
 
       {loading ? (
         <div className="card" style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>Caricamento...</div>
-      ) : moduli.length === 0 ? (
-        <div className="card" style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>Nessun coefficiente configurato.</div>
-      ) : moduli.map(modulo => (
+      ) : filteredModuli.length === 0 ? (
+        <div className="card" style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>Nessun coefficiente corrisponde ai filtri.</div>
+      ) : filteredModuli.map(modulo => (
         <div className="card" style={{ marginBottom: 24 }} key={modulo}>
           <div className="card-header" style={{ fontWeight: 700 }}>{modulo}</div>
           <div className="card-body">
@@ -136,7 +195,7 @@ export default function Coefficienti() {
                   </tr>
                 </thead>
                 <tbody>
-                  {items.filter(c => c.modulo === modulo).map(c => {
+                  {filteredItems.filter(c => c.modulo === modulo).map(c => {
                     const draft = isDraft(c);
                     const localDraft = drafts[c.id];
                     return (
