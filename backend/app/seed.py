@@ -10,10 +10,12 @@ from app.models.user import User
 
 
 from app.config import settings as app_settings
+from app.migrations import run_migrations
 
 
 def seed_database():
     Base.metadata.create_all(bind=engine)
+    run_migrations(engine)
     db: Session = SessionLocal()
 
     if app_settings.admin__enable:
@@ -72,24 +74,74 @@ def seed_database():
             db.commit()
             print(f"Inserted {len(all_formulas)} default formulas")
 
-    if db.query(BeamProfile).count() == 0:
-        sample_profiles = [
-            BeamProfile(nome="Tubolare quadro 160x160x16", area_mm2=9216, iy_mm4=32100000, iz_mm4=32100000, hy_mm3=401000, bz_mm3=401000),
-            BeamProfile(nome="Tubolare quadro 120x120x12", area_mm2=5184, iy_mm4=12400000, iz_mm4=12400000, hy_mm3=207000, bz_mm3=207000),
-            BeamProfile(nome="Tubolare quadro 100x100x10", area_mm2=3600, iy_mm4=5800000, iz_mm4=5800000, hy_mm3=116000, bz_mm3=116000),
-            BeamProfile(nome="Tubolare quadro 80x80x8", area_mm2=2304, iy_mm4=2300000, iz_mm4=2300000, hy_mm3=57500, bz_mm3=57500),
-            BeamProfile(nome="Profilo HEA 200", area_mm2=5380, iy_mm4=36900000, iz_mm4=13400000, hy_mm3=369000, bz_mm3=134000),
-            BeamProfile(nome="Profilo HEA 160", area_mm2=3880, iy_mm4=16700000, iz_mm4=6150000, hy_mm3=209000, bz_mm3=76900),
-            BeamProfile(nome="Profilo HEA 120", area_mm2=2530, iy_mm4=6060000, iz_mm4=2310000, hy_mm3=101000, bz_mm3=38600),
-        ]
-        for p in sample_profiles:
-            db.add(p)
-        db.commit()
-        print(f"Inserted {len(sample_profiles)} beam profiles")
+    _seed_beam_profiles(db)
+    _seed_unit_conversions(db)
 
     _precalc_default_results(db)
     db.close()
     print("Database seeded successfully!")
+
+
+def _seed_beam_profiles(db):
+    import os
+    json_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "beam_profiles_seed.json")
+    if not os.path.exists(json_path):
+        print("beam_profiles_seed.json not found, using fallback profiles")
+        fallback = [
+            BeamProfile(nome="Tubolare quadro 160x160x16", riferimento=107, area_mm2=8556.7, iy_mm4=28351100, iz_mm4=28351100, hy_mm=160, bz_mm=160),
+            BeamProfile(nome="Tubolare quadro 120x120x12", riferimento=112, area_mm2=5184, iy_mm4=10202110, iz_mm4=10202110, hy_mm=120, bz_mm=120),
+            BeamProfile(nome="Tubolare quadro 100x100x10", riferimento=115, area_mm2=3600, iy_mm4=4920001, iz_mm4=4920001, hy_mm=100, bz_mm=100),
+            BeamProfile(nome="Tubolare quadro 80x80x8", riferimento=117, area_mm2=2304, iy_mm4=2015232, iz_mm4=2015232, hy_mm=80, bz_mm=80),
+        ]
+        for p in fallback:
+            db.add(p)
+        db.commit()
+        print(f"Inserted {len(fallback)} fallback beam profiles")
+        return
+
+    with open(json_path) as f:
+        data = json.load(f)
+    profiles_data = data.get("profiles", [])
+
+    existing = db.query(BeamProfile).all()
+    existing_by_name = {p.nome: p for p in existing}
+    seen = set()
+    for pd in profiles_data:
+        seen.add(pd["nome"])
+        profile = existing_by_name.get(pd["nome"])
+        if profile:
+            for key, val in pd.items():
+                setattr(profile, key, val)
+        else:
+            db.add(BeamProfile(**pd))
+    for nome, profile in existing_by_name.items():
+        if nome not in seen:
+            db.delete(profile)
+    db.commit()
+    print(f"Beam profiles synced from beam_profiles_seed.json ({len(profiles_data)} profili globali)")
+
+
+def _seed_unit_conversions(db):
+    import os
+    json_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "beam_profiles_seed.json")
+    from app.models.unit_conversion import UnitConversion
+    conversions = []
+    if os.path.exists(json_path):
+        with open(json_path) as f:
+            data = json.load(f)
+        conversions = data.get("conversions", [])
+    if not conversions:
+        conversions = [
+            {"grandezza": "Area trasversale", "unita_mm": "mm2", "unita_m": "m2",
+             "fattore": 1000000.0, "riferimento_mm": 7723.16, "riferimento_m": 0.00772316},
+            {"grandezza": "Momento d'inerzia", "unita_mm": "mm4", "unita_m": "m4",
+             "fattore": 1000000000000.0, "riferimento_mm": 28351100.0, "riferimento_m": 2.83511e-05},
+        ]
+    db.query(UnitConversion).delete()
+    for c in conversions:
+        db.add(UnitConversion(**c))
+    db.commit()
+    print(f"Unit conversions seeded ({len(conversions)} conversioni)")
 
 
 def _precalc_default_results(db):

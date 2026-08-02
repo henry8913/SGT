@@ -3,13 +3,19 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.beam_profile import BeamProfile
+from app.models.unit_conversion import UnitConversion
 
 router = APIRouter(prefix="/api/profiles", tags=["profiles"])
 
 
+@router.get("/conversions")
+def list_conversions(db: Session = Depends(get_db)):
+    return db.query(UnitConversion).order_by(UnitConversion.id).all()
+
+
 @router.get("")
 def list_profiles(db: Session = Depends(get_db)):
-    return db.query(BeamProfile).order_by(BeamProfile.nome).all()
+    return db.query(BeamProfile).order_by(BeamProfile.riferimento).all()
 
 
 @router.post("", status_code=201)

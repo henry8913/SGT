@@ -9,6 +9,7 @@ from app.models.formulas import Formula
 from app.models.results import Result
 from app.models.user import User
 from app.models.beam_profile import BeamProfile
+from app.models.unit_conversion import UnitConversion
 
 __all__ = [
     "Project",
@@ -22,4 +23,5 @@ __all__ = [
     "Result",
     "User",
     "BeamProfile",
+    "UnitConversion",
 ]

@@ -8,7 +8,10 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.engine.excel_engine import invalidate_calc_cache
+from app.extract_profiles import extract_profiles
+from app.models.beam_profile import BeamProfile
 from app.models.formulas import Formula
+from app.models.unit_conversion import UnitConversion
 from app.routers.auth import get_current_user
 from app.models.user import User
 from app.schemas.formulas import FormulaCreate, FormulaResponse, FormulaUpdate
@@ -240,6 +243,8 @@ def upload_excel(
             db.add(Formula(**f))
         db.commit()
 
+    _refresh_beam_profiles(db, wb)
+
     invalidate_calc_cache()
     wb.close()
 
@@ -252,3 +257,38 @@ def upload_excel(
         "sheets": len(wb.sheetnames),
         "message": f"Importate {stats['formulas']} formule, {stats['inputs']} input, {stats['labels']} etichette da {len(wb.sheetnames)} fogli",
     }
+
+
+def _refresh_beam_profiles(db: Session, wb):
+    """Sincronizza la libreria globale dei profili (e le conversioni di unità)
+    dal foglio Proprietà_beam del file appena caricato."""
+    if "Proprietà_beam" not in wb.sheetnames:
+        return
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp:
+        wb.save(tmp.name)
+        tmp_path = tmp.name
+    try:
+        data = extract_profiles(tmp_path)
+    finally:
+        os.unlink(tmp_path)
+
+    existing = db.query(BeamProfile).all()
+    existing_by_name = {p.nome: p for p in existing}
+    seen = set()
+    for pd in data.get("profiles", []):
+        seen.add(pd["nome"])
+        profile = existing_by_name.get(pd["nome"])
+        if profile:
+            for key, val in pd.items():
+                setattr(profile, key, val)
+        else:
+            db.add(BeamProfile(**pd))
+    for nome, profile in existing_by_name.items():
+        if nome not in seen:
+            db.delete(profile)
+
+    db.query(UnitConversion).delete()
+    for c in data.get("conversions", []):
+        db.add(UnitConversion(**c))
+    db.commit()
+    print(f"[Profiles] Synced {len(data.get('profiles', []))} beam profiles from upload")
