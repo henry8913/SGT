@@ -10,7 +10,7 @@ const team = [
   {
     nome: 'Elena F.',
     ruolo: 'QA & Certification Specialist',
-    bio: 'Responsabile della verifica dei calcoli di stabilità e della conformità alle normative C25/FEM. Monitora costantemente la correttezza delle 55.000+ formule importate dall\'Excel. Il suo obiettivo: zero errori, massima affidabilità.',
+    bio: 'Responsabile della verifica dei calcoli di stabilità e della conformità alle normative C25/FEM. Monitora costantemente la correttezza degli step di calcolo e dei coefficienti pubblicati. Il suo obiettivo: zero errori, massima affidabilità.',
     img: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop&crop=face&q=80',
   },
   {
@@ -29,15 +29,15 @@ const team = [
 
 const stats = [
   { value: '15+', label: 'Anni di esperienza nel settore' },
-  { value: '55.031', label: 'Formule di calcolo importate' },
-  { value: '18', label: 'Fogli Excel integrati' },
+  { value: '8', label: 'Step di calcolo automatici' },
+  { value: '23', label: 'Coefficienti configurabili' },
   { value: '100%', label: 'Trasparenza dei calcoli' },
 ];
 
 const values = [
-  { icon: '🎯', title: 'Precisione', desc: 'Costruiamo strumenti affidabili: ogni calcolo è verificato e corrisponde esattamente alle formule del foglio Excel originale. Nessuna approssimazione.' },
-  { icon: '🔍', title: 'Trasparenza', desc: 'Output spiegabili, nessuna black box. Ogni formula è visibile con un clic sul pulsante [fx]. L\'ingegnere vede il dato e verifica la correttezza.' },
-  { icon: '👤', title: 'Human-in-the-loop', desc: 'Il software calcola, l\'ingegnere verifica. La responsabilità della conformità resta del tecnico qualificato. Le formule sono modificabili e controllabili.' },
+  { icon: '🎯', title: 'Precisione', desc: 'Costruiamo strumenti affidabili: ogni calcolo è sviluppato e verificato insieme all\'ingegnere strutturista. Nessuna approssimazione.' },
+  { icon: '🔍', title: 'Trasparenza', desc: 'Output spiegabili, nessuna black box. Ogni step di calcolo è consultabile nel frontend e i coefficienti numerici sono configurabili dal pannello admin.' },
+  { icon: '👤', title: 'Human-in-the-loop', desc: 'Il software calcola, l\'ingegnere verifica. La responsabilità della conformità resta del tecnico qualificato. Ogni coefficiente è configurabile e controllabile.' },
   { icon: '🔒', title: 'Sicurezza', desc: 'Tenant isolati, autenticazione robusta, password crittografate. I progetti e i dati di ogni utente restano privati e protetti.' },
 ];
 
@@ -50,8 +50,8 @@ export default function ChiSiamo() {
           <h2 style={{ fontSize: 26, marginBottom: 16 }}>Software per il calcolo di stabilità,<br />controllo all'ingegnere</h2>
           <p style={{ color: '#6b7280', fontSize: 14, lineHeight: 1.8 }}>
             SGT nasce per eliminare il lavoro ripetitivo dalla verifica di stabilità delle gru a torre,
-            mantenendo il controllo totale del tecnico su ogni calcolo. Il tradizionale foglio Excel
-            con oltre 55.000 formule è stato trasformato in un SaaS moderno, accessibile da qualsiasi dispositivo.
+            mantenendo il controllo totale del tecnico su ogni calcolo. Il tradizionale foglio di calcolo
+            è stato trasformato in un SaaS moderno con un motore Python, accessibile da qualsiasi dispositivo.
           </p>
         </div>
 
@@ -80,7 +80,7 @@ export default function ChiSiamo() {
           <p style={{ color: '#6b7280', fontSize: 14, lineHeight: 1.8 }}>
             Questo lavoro richiede ore di ingegneria qualificata, è soggetto a errori di trascrizione
             e rallenta la certificazione della macchina. SGT digitalizza l'intero processo, mantenendo
-            la stessa precisione del calcolo Excel e aggiungendo accessibilità, collaborazione e trasparenza.
+            la stessa precisione del calcolo di riferimento e aggiungendo accessibilità, collaborazione e trasparenza.
           </p>
         </div>
 

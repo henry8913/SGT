@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { calculate } from '../../api/client';
-import FormulaPopover from '../../components/FormulaPopover';
 
 export default function Stabilita() {
   const { id } = useParams();
@@ -53,7 +52,6 @@ export default function Stabilita() {
                   <tr key={c.condition_id}>
                     <td style={{ fontWeight: 600 }}>
                       {c.condition_id}
-                      <FormulaPopover step={title.includes('Quadrato') ? 'stabilita_q' : 'stabilita_d'} campo={c.condition_id} label={`Condizione ${c.condition_id}`} currentValue={c.safety_coefficient} />
                     </td>
                     <td>{c.v?.toLocaleString()}</td>
                     <td>{c.mr?.toLocaleString()}</td>

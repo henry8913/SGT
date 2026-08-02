@@ -22,11 +22,13 @@ export default function Layout({ children }) {
   const navLinks = [
     { to: '/', label: 'Home' },
     { to: '/dashboard', label: 'Progetti' },
-    { to: '/formule', label: 'Formule' },
     { to: '/verifica', label: 'Verifica' },
     { to: '/settings/profili', label: 'Profili' },
     { to: '/settings/password', label: 'Password' },
-    ...(user.is_admin ? [{ to: '/admin/users', label: 'Admin' }] : []),
+    ...(user.is_admin ? [
+      { to: '/admin/users', label: 'Admin' },
+      { to: '/admin/coefficienti', label: 'Coefficienti' },
+    ] : []),
   ];
 
   return (

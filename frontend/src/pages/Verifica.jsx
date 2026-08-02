@@ -1,49 +1,50 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import api, { projects, formulas as formulasApi } from '../api/client';
+import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import api, { projects, calculate } from '../api/client';
 
 const STEPS = [
-  { key: 'macchina',      sheet: 'Caratteristiche_macchina',  label: 'Caratteristiche macchina' },
-  { key: 'geometria',     sheet: 'Geometria_braccio',          label: 'Geometria braccio' },
-  { key: 'masse',         sheet: 'Masse_proprie',              label: 'Masse proprie' },
-  { key: 'baricentri',    sheet: 'Baricentri',                 label: 'Baricentri' },
-  { key: 'aree_vento',    sheet: 'A_b',                        label: 'Aree vento - A_b' },
-  { key: 'aree_vento',    sheet: 'A_rc',                       label: 'Aree vento - A_rc' },
-  { key: 'aree_vento',    sheet: 'A_cb',                       label: 'Aree vento - A_cb' },
-  { key: 'aree_vento',    sheet: 'A_Pu',                       label: 'Aree vento - A_Pu' },
-  { key: 'vento',         sheet: 'Vento',                      label: 'Vento' },
-  { key: 'stabilita_q',   sheet: 'Stabilità C25-Q',            label: 'Stabilità C25-Q' },
-  { key: 'stabilita_d',   sheet: 'Stabilità C25-D',            label: 'Stabilità C25-D' },
-  { key: 'carichi_ralla', sheet: 'Carrichi ralla e base - C25',label: 'Carichi ralla' },
-  { key: 'curve_carico',  sheet: 'Curve_di_carico II',         label: 'Curve carico II' },
-  { key: 'curve_carico',  sheet: 'Curve_di_carico II IV',      label: 'Curve carico II/IV' },
-  { key: 'diagramma',     sheet: 'Diagramma di carico',        label: 'Diagramma carico' },
+  { key: 'macchina', label: 'Caratteristiche macchina' },
+  { key: 'geometria', label: 'Geometria braccio' },
+  { key: 'masse', label: 'Masse proprie' },
+  { key: 'baricentri', label: 'Baricentri' },
+  { key: 'aree_vento', label: 'Aree vento' },
+  { key: 'vento', label: 'Vento' },
+  { key: 'stabilita_q', label: 'Stabilità C25-Q' },
+  { key: 'stabilita_d', label: 'Stabilità C25-D' },
+  { key: 'curve_carico', label: 'Curve di carico' },
+  { key: 'carichi_ralla', label: 'Carichi ralla' },
+  { key: 'diagramma', label: 'Diagramma carico' },
 ];
 
-const MACHINE_CELL_MAP = {
-  sbraccio_max: 'S3', carico_punta_tiro2: 'S4', carico_punta_tiro24: 'S5',
-  carico_max_tiro2: 'S6', escursione_carrello_tiro2: 'S7', carico_max_tiro24: 'S8',
-  escursione_carrello_tiro24: 'S9', altezza_max: 'S10', diametro_funi_sollevamento: 'S11', diametro_fune_carrello: 'S12',
-};
+const MACHINE_FIELDS = [
+  { key: 'sbraccio_max', label: 'Sbraccio massimo (m)' },
+  { key: 'carico_punta_tiro2', label: 'Carico utile punta · tiro II (kg)' },
+  { key: 'carico_punta_tiro24', label: 'Carico utile punta · tiro II/IV (kg)' },
+  { key: 'carico_max_tiro2', label: 'Carico max · tiro II (kg)' },
+  { key: 'escursione_carrello_tiro2', label: 'Escursione carrello · tiro II (m)' },
+  { key: 'carico_max_tiro24', label: 'Carico max · tiro II/IV (kg)' },
+  { key: 'escursione_carrello_tiro24', label: 'Escursione carrello · tiro II/IV (m)' },
+  { key: 'altezza_max', label: 'Altezza max sotto gancio (m)' },
+  { key: 'diametro_funi_sollevamento', label: 'Diametro funi sollevamento (mm)' },
+  { key: 'diametro_fune_carrello', label: 'Diametro fune carrello (mm)' },
+];
 
-const CELL_TO_MACHINE_MAP = Object.fromEntries(Object.entries(MACHINE_CELL_MAP).map(([k, v]) => [v, k]));
+const RESULT_STEPS = ['baricentri', 'vento', 'stabilita_q', 'stabilita_d', 'carichi_ralla', 'diagramma'];
 
 export default function Verifica() {
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [projectsList, setProjectsList] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
   const [currentStep, setCurrentStep] = useState(0);
-  const [cells, setCells] = useState([]);
-  const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState('idle');
-  const [editId, setEditId] = useState(null);
-  const [editText, setEditText] = useState('');
-  const [inputValues, setInputValues] = useState({});
-  const [pendingInputs, setPendingInputs] = useState({});
-  const saveRef = useRef(false);
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+  const [machine, setMachine] = useState(null);
+  const [geometry, setGeometry] = useState([]);
+  const [masses, setMasses] = useState([]);
+  const [windAreas, setWindAreas] = useState([]);
+  const [loadCurves, setLoadCurves] = useState([]);
+  const [results, setResults] = useState({});
 
   useEffect(() => { projects.list().then(r => setProjectsList(r.data)).catch(() => {}); }, []);
 
@@ -55,196 +56,354 @@ export default function Verifica() {
     }
   }, [projectsList]);
 
-  const currentStepDef = STEPS[currentStep];
-  const stepKey = currentStepDef?.key;
-  const stepSheet = currentStepDef?.sheet;
+  const stepKey = STEPS[currentStep]?.key;
 
-  const loadStep = useCallback(async (projectId, idx) => {
-    const sd = STEPS[idx];
-    setLoading(true); setResults(null); setEditId(null); setPendingInputs({});
+  const loadProject = useCallback(async (projectId) => {
+    setLoading(true); setStatus('idle');
     try {
-      const res = await formulasApi.list({ sheet: sd.sheet });
-      setCells(res.data || []);
-
-      const newInputs = {};
-      try {
-        const machineRes = await api.get(`/projects/${projectId}/machine`);
-        if (machineRes.data) Object.entries(machineRes.data).forEach(([key, val]) => {
-          if (val !== null && val !== undefined && !['id', 'project_id', 'created_at'].includes(key))
-            newInputs[MACHINE_CELL_MAP[key] || key] = String(val);
-        });
-      } catch (e) {}
-      try {
-        const stabRes = await api.get(`/projects/${projectId}/stability`);
-        stabRes.data.forEach(p => { if (p.valore !== null) newInputs[p.parametro] = String(p.valore); });
-      } catch (e) {}
-      try {
-        const massesRes = await api.get(`/projects/${projectId}/masses`);
-        massesRes.data.forEach((m, i) => {
-          if (m.massa_kg !== null) newInputs[`Q${i + 1}`] = String(m.massa_kg);
-          if (m.braccio_m !== null) newInputs[`T${i + 1}`] = String(m.braccio_m);
-        });
-      } catch (e) {}
-      try {
-        const curvesRes = await api.get(`/projects/${projectId}/load-curves`);
-        curvesRes.data.forEach((c, i) => { if (c.carico_kg !== null) newInputs[`R${i + 1}`] = String(c.carico_kg); });
-      } catch (e) {}
-      try {
-        const geomRes = await api.get(`/projects/${projectId}/geometry`);
-        if (Array.isArray(geomRes.data)) geomRes.data.forEach((g, i) => { if (g.lunghezza !== null) newInputs[`L${i + 16}`] = String(g.lunghezza); });
-      } catch (e) {}
-
-      setInputValues(newInputs);
-
-      const resR = await api.get(`/projects/${projectId}/risultati`);
-      for (const r of resR.data) { if (r.step === sd.key) setResults(typeof r.dati === 'string' ? JSON.parse(r.dati) : r.dati); }
-    } catch (err) { console.error(err); }
+      const [m, g, ms, wa, lc, rr] = await Promise.all([
+        api.get(`/projects/${projectId}/machine`).catch(() => ({ data: null })),
+        api.get(`/projects/${projectId}/geometry`).catch(() => ({ data: [] })),
+        api.get(`/projects/${projectId}/masses`).catch(() => ({ data: [] })),
+        api.get(`/projects/${projectId}/wind-areas`).catch(() => ({ data: [] })),
+        api.get(`/projects/${projectId}/load-curves`).catch(() => ({ data: [] })),
+        api.get(`/projects/${projectId}/risultati`).catch(() => ({ data: [] })),
+      ]);
+      setMachine(m.data || {});
+      setGeometry(Array.isArray(g.data) ? g.data : []);
+      setMasses(Array.isArray(ms.data) ? ms.data : []);
+      setWindAreas(Array.isArray(wa.data) ? wa.data : []);
+      setLoadCurves(Array.isArray(lc.data) ? lc.data : []);
+      const resMap = {};
+      for (const r of rr.data || []) {
+        resMap[r.step] = typeof r.dati === 'string' ? JSON.parse(r.dati) : r.dati;
+      }
+      setResults(resMap);
+    } catch (err) {
+      console.error(err);
+    }
     setLoading(false);
   }, []);
 
-  const saveStepData = async (values) => {
-    const vals = values || inputValues;
-    if (!selectedProject || !stepKey) return;
-    if (stepKey === 'macchina' || stepKey === 'baricentri') {
-      const mData = {};
-      cells.forEach(c => {
-        if (vals[c.campo] !== undefined) { const v = parseFloat(vals[c.campo]); if (!isNaN(v)) mData[CELL_TO_MACHINE_MAP[c.campo] || c.campo] = v; }
-      });
-      if (Object.keys(mData).length) await api.put(`/projects/${selectedProject}/machine`, mData);
-    }
-    if (['stabilita_q', 'stabilita_d', 'vento', 'carichi_ralla'].includes(stepKey)) {
-      for (const [key, val] of Object.entries(vals)) {
-        if (val !== undefined && val !== '') { const v = parseFloat(val); if (!isNaN(v)) {
-          const existing = await api.get(`/projects/${selectedProject}/stability`);
-          const found = existing.data.find(p => p.parametro === key);
-          if (found) await api.put(`/projects/${selectedProject}/stability/${found.id}`, { valore: v });
-          else await api.post(`/projects/${selectedProject}/stability`, { parametro: key, valore: v });
-        }}
-      }
-    }
-    if (stepKey === 'masse') {
-      const mData = [];
-      cells.forEach(c => {
-        if (vals[c.campo] !== undefined) {
-          const idx = parseInt(c.campo.match(/\d+/)?.[0] || '1') - 1;
-          if (!mData[idx]) mData[idx] = {};
-          const v = parseFloat(vals[c.campo]);
-          if (!isNaN(v)) { if (c.campo.startsWith('Q')) mData[idx].massa_kg = v; if (c.campo.startsWith('T')) mData[idx].braccio_m = v; }
-        }
-      });
-      for (let i = 0; i < mData.length; i++) { if (mData[i]) { try {
-        const existing = await api.get(`/projects/${selectedProject}/masses`);
-        if (existing.data[i]) await api.put(`/projects/${selectedProject}/masses/${existing.data[i].id}`, mData[i]);
-        else await api.post(`/projects/${selectedProject}/masses`, mData[i]);
-      } catch (e) { await api.post(`/projects/${selectedProject}/masses`, mData[i]); } } }
-    }
-    if (stepKey === 'geometria') {
-      for (const [key, val] of Object.entries(vals)) {
-        if (val !== undefined && val !== '' && key.startsWith('L')) {
-          const v = parseFloat(val); if (!isNaN(v)) { try {
-            const existing = await api.get(`/projects/${selectedProject}/geometry`);
-            const idx = parseInt(key.match(/\d+/)?.[0] || '0') - 16;
-            if (existing.data[idx]) await api.put(`/projects/${selectedProject}/geometry/${existing.data[idx].id}`, { lunghezza: v });
-          } catch (e) {} }
-        }
-      }
-    }
-    if (stepKey === 'aree_vento') {
-      for (const [key, val] of Object.entries(vals)) {
-        if (val !== undefined && val !== '' && key.startsWith('V')) {
-          const v = parseFloat(val); if (!isNaN(v)) { try {
-            const existing = await api.get(`/projects/${selectedProject}/wind-areas`);
-            const idx = parseInt(key.match(/\d+/)?.[0] || '0') - 1;
-            if (existing.data[idx]) await api.put(`/projects/${selectedProject}/wind-areas/${existing.data[idx].id}`, { valore: v });
-            else await api.post(`/projects/${selectedProject}/wind-areas`, { parte: stepSheet?.split('_').pop()?.toLowerCase() || '', valore: v });
-          } catch (e) {} }
-        }
-      }
-    }
-    if (stepKey === 'curve_carico') {
-      const cData = [];
-      cells.forEach(c => {
-        if (vals[c.campo] !== undefined && c.campo.startsWith('R')) {
-          const idx = parseInt(c.campo.match(/\d+/)?.[0] || '1') - 1;
-          if (!cData[idx]) cData[idx] = {};
-          const v = parseFloat(vals[c.campo]); if (!isNaN(v)) cData[idx].carico_kg = v;
-        }
-      });
-      for (let i = 0; i < cData.length; i++) { if (cData[i]) { try {
-        const existing = await api.get(`/projects/${selectedProject}/load-curves`);
-        if (existing.data[i]) await api.put(`/projects/${selectedProject}/load-curves/${existing.data[i].id}`, cData[i]);
-        else await api.post(`/projects/${selectedProject}/load-curves`, cData[i]);
-      } catch (e) { await api.post(`/projects/${selectedProject}/load-curves`, cData[i]); } } }
-    }
+  const handleProjectSelect = async (projectId) => {
+    setSelectedProject(projectId);
+    setCurrentStep(0);
+    loadProject(projectId);
   };
 
-  const recalculate = async (pid, targetStepKey) => {
-    const sk = targetStepKey || stepKey;
+  const recalculate = async () => {
     setStatus('calculating');
     try {
-      await api.post(`/projects/${pid || selectedProject}/calcola`);
-      const resR = await api.get(`/projects/${pid || selectedProject}/risultati`);
-      for (const r of resR.data) { if (r.step === sk) setResults(typeof r.dati === 'string' ? JSON.parse(r.dati) : r.dati); }
+      await calculate.run(selectedProject);
+      const rr = await calculate.results(selectedProject);
+      const resMap = {};
+      for (const r of rr.data || []) {
+        resMap[r.step] = typeof r.dati === 'string' ? JSON.parse(r.dati) : r.dati;
+      }
+      setResults(resMap);
       setStatus('done');
-      setTimeout(() => setStatus(s => s === 'done' ? 'idle' : s), 2500);
-    } catch (err) { console.error('Calc error:', err); setStatus('idle'); }
+      setTimeout(() => setStatus(s => (s === 'done' ? 'idle' : s)), 2500);
+    } catch (err) {
+      console.error('Calc error:', err);
+      setStatus('idle');
+    }
   };
 
-  const confirmInput = async (campo) => {
-    const val = pendingInputs[campo];
-    if (val === undefined) return;
-    const newInputs = { ...inputValues, [campo]: val };
-    setInputValues(newInputs);
-    setPendingInputs(prev => { const n = { ...prev }; delete n[campo]; return n; });
+  const saveMachine = async () => {
+    if (!machine) return;
     setStatus('saving');
     try {
-      await saveStepData(newInputs);
+      await api.put(`/projects/${selectedProject}/machine`, machine);
       setStatus('saved');
-      setTimeout(() => {
-        setStatus('calculating');
-        recalculate(selectedProject, stepKey);
-      }, 300);
+      setTimeout(() => { recalculate(); }, 300);
     } catch (e) { setStatus('idle'); }
   };
 
-  const cancelInput = (campo) => {
-    setPendingInputs(prev => { const n = { ...prev }; delete n[campo]; return n; });
-  };
-
-  const handleProjectSelect = async (projectId) => {
-    setSelectedProject(projectId); setCurrentStep(0); setInputValues({});
-    loadStep(projectId, 0);
-  };
-
-  const goToStep = async (idx) => {
-    setCurrentStep(idx); setInputValues({});
-    loadStep(selectedProject, idx);
-  };
-
-  const saveFormula = async (id, newFormula) => {
+  const saveGeometry = async () => {
+    setStatus('saving');
     try {
-      await formulasApi.update(id, { formula: newFormula }); setEditId(null);
-      const res = await formulasApi.list({ sheet: stepSheet }); setCells(res.data || []);
-      await saveStepData();
-      await recalculate(selectedProject, stepKey);
-    } catch (err) { alert('Errore salvataggio formula'); }
+      for (const g of geometry) {
+        if (g.id) await api.put(`/projects/${selectedProject}/geometry/${g.id}`, { lunghezza: g.lunghezza, profilo: g.profilo });
+        else await api.post(`/projects/${selectedProject}/geometry`, g).catch(() => {});
+      }
+      setStatus('saved');
+      setTimeout(() => { recalculate(); }, 300);
+    } catch (e) { setStatus('idle'); }
   };
 
-  const resultsValues = results?.values || {};
-  const inputs = cells.filter(c => (c.cell_type || 'formula') === 'input');
-  const formulaCells = cells.filter(c => (c.cell_type || 'formula') === 'formula');
-  const constants = cells.filter(c => (c.cell_type || '') === 'constant');
+  const saveMasses = async () => {
+    setStatus('saving');
+    try {
+      for (const m of masses) {
+        const payload = { massa_kg: m.massa_kg, braccio_m: m.braccio_m, utilizzato: m.utilizzato };
+        if (m.id) await api.put(`/projects/${selectedProject}/masses/${m.id}`, payload);
+        else await api.post(`/projects/${selectedProject}/masses`, payload).catch(() => {});
+      }
+      setStatus('saved');
+      setTimeout(() => { recalculate(); }, 300);
+    } catch (e) { setStatus('idle'); }
+  };
 
-  const groups = {};
-  cells.forEach(c => { const m = c.campo.match(/(\d+)/); if (!m) return; const r = parseInt(m[1]); if (!groups[r]) groups[r] = []; groups[r].push(c); });
-  Object.values(groups).forEach(arr => { arr.sort((a, b) => { const ca = a.campo.match(/^([A-Z]+)/)[1]; const cb = b.campo.match(/^([A-Z]+)/)[1]; return ca.length !== cb.length ? ca.length - cb.length : ca.localeCompare(cb); }); });
-  const sortedRows = Object.entries(groups).sort(([a],[b]) => parseInt(a)-parseInt(b));
+  const saveWindAreas = async () => {
+    setStatus('saving');
+    try {
+      for (const a of windAreas) {
+        const payload = { valore: a.valore, coordinata_x: a.coordinata_x, coordinata_y: a.coordinata_y };
+        if (a.id) await api.put(`/projects/${selectedProject}/wind-areas/${a.id}`, payload);
+        else await api.post(`/projects/${selectedProject}/wind-areas`, { parte: a.parte, parametro: a.parametro, ...payload }).catch(() => {});
+      }
+      setStatus('saved');
+      setTimeout(() => { recalculate(); }, 300);
+    } catch (e) { setStatus('idle'); }
+  };
+
+  const saveLoadCurves = async () => {
+    setStatus('saving');
+    try {
+      for (const c of loadCurves) {
+        const payload = { carico_kg: c.carico_kg };
+        if (c.id) await api.put(`/projects/${selectedProject}/load-curves/${c.id}`, payload);
+        else await api.post(`/projects/${selectedProject}/load-curves`, { raggio_m: c.raggio_m, tipo: c.tipo, ...payload }).catch(() => {});
+      }
+      setStatus('saved');
+      setTimeout(() => { recalculate(); }, 300);
+    } catch (e) { setStatus('idle'); }
+  };
+
+  const num = (e) => (e.target.value === '' ? null : parseFloat(e.target.value));
+
+  const renderResultsTable = (title, data, columns) => {
+    if (!data) return null;
+    return (
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="card-header">{title}</div>
+        <div className="card-body">
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>{columns.map(c => <th key={c.key}>{c.label}</th>)}</tr>
+              </thead>
+              <tbody>
+                {data.map((row, i) => (
+                  <tr key={i}>
+                    {columns.map(c => <td key={c.key} style={c.bold ? { fontWeight: 600 } : undefined}>{row[c.key]?.toLocaleString?.() ?? row[c.key] ?? '—'}</td>)}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderStepContent = () => {
+    const res = results[stepKey];
+    switch (stepKey) {
+      case 'macchina':
+        return (
+          <div className="card">
+            <div className="card-header">Caratteristiche macchina</div>
+            <div className="card-body">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
+                {MACHINE_FIELDS.map(f => (
+                  <div key={f.key}>
+                    <label style={{ display: 'block', marginBottom: 4, fontSize: 13, color: '#333' }}>{f.label}</label>
+                    <input type="number" step="any" value={machine[f.key] ?? ''}
+                      onChange={e => setMachine({ ...machine, [f.key]: num(e) })}
+                      style={{ width: '100%', padding: '8px 12px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, background: '#F0F7FF', boxSizing: 'border-box' }} />
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop: 20 }}>
+                <button onClick={saveMachine} className="btn btn-dark btn-sm">Salva e ricalcola</button>
+              </div>
+            </div>
+          </div>
+        );
+      case 'geometria':
+        return (
+          <div className="card">
+            <div className="card-header">Geometria braccio</div>
+            <div className="card-body">
+              {geometry.length === 0 ? <p style={{ color: 'var(--gray)', fontSize: 13 }}>Nessun elemento geometrico inserito.</p> : (
+                <div className="table-wrap">
+                  <table style={{ fontSize: 13 }}>
+                    <thead>
+                      <tr><th>Elemento</th><th>Modulo</th><th>Profilo</th><th>Lunghezza (m)</th></tr>
+                    </thead>
+                    <tbody>
+                      {geometry.map((g, i) => (
+                        <tr key={g.id || i}>
+                          <td>{g.elemento || '—'}</td>
+                          <td>{g.modulo || '—'}</td>
+                          <td><input value={g.profilo ?? ''} onChange={e => { const n = [...geometry]; n[i] = { ...g, profilo: e.target.value }; setGeometry(n); }} style={{ background: '#fff', padding: '4px 6px', fontSize: 12 }} /></td>
+                          <td><input type="number" step="any" value={g.lunghezza ?? ''} onChange={e => { const n = [...geometry]; n[i] = { ...g, lunghezza: num(e) }; setGeometry(n); }} style={{ background: '#fff', padding: '4px 6px', fontSize: 12 }} /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              <div style={{ marginTop: 20 }}>
+                <button onClick={saveGeometry} className="btn btn-dark btn-sm">Salva e ricalcola</button>
+              </div>
+            </div>
+          </div>
+        );
+      case 'masse':
+        return (
+          <div className="card">
+            <div className="card-header">Masse proprie</div>
+            <div className="card-body">
+              {masses.length === 0 ? <p style={{ color: 'var(--gray)', fontSize: 13 }}>Nessuna massa inserita.</p> : (
+                <div className="table-wrap">
+                  <table style={{ fontSize: 13 }}>
+                    <thead>
+                      <tr><th>Componente</th><th>Massa (kg)</th><th>Braccio (m)</th><th>Utilizzato</th></tr>
+                    </thead>
+                    <tbody>
+                      {masses.map((m, i) => (
+                        <tr key={m.id || i}>
+                          <td style={{ fontWeight: 600 }}>{m.componente || '—'}</td>
+                          <td><input type="number" step="any" value={m.massa_kg ?? ''} onChange={e => { const n = [...masses]; n[i] = { ...m, massa_kg: num(e) }; setMasses(n); }} style={{ background: '#fff', padding: '4px 6px', fontSize: 12, width: 100 }} /></td>
+                          <td><input type="number" step="any" value={m.braccio_m ?? ''} onChange={e => { const n = [...masses]; n[i] = { ...m, braccio_m: num(e) }; setMasses(n); }} style={{ background: '#fff', padding: '4px 6px', fontSize: 12, width: 100 }} /></td>
+                          <td><input type="checkbox" checked={!!m.utilizzato} onChange={e => { const n = [...masses]; n[i] = { ...m, utilizzato: e.target.checked }; setMasses(n); }} /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              <div style={{ marginTop: 20 }}>
+                <button onClick={saveMasses} className="btn btn-dark btn-sm">Salva e ricalcola</button>
+              </div>
+            </div>
+          </div>
+        );
+      case 'aree_vento':
+        return (
+          <>
+            <div className="card" style={{ marginBottom: 16 }}>
+              <div className="card-header">Aree esposte al vento</div>
+              <div className="card-body">
+                {windAreas.length === 0 ? <p style={{ color: 'var(--gray)', fontSize: 13 }}>Nessuna area vento inserita.</p> : (
+                  <div className="table-wrap">
+                    <table style={{ fontSize: 13 }}>
+                      <thead>
+                        <tr><th>Parte</th><th>Parametro</th><th>Valore</th><th>Xcs</th><th>Ycs</th></tr>
+                      </thead>
+                      <tbody>
+                        {windAreas.map((a, i) => (
+                          <tr key={a.id || i}>
+                            <td style={{ fontWeight: 600 }}>{a.parte}</td>
+                            <td>{a.parametro || '—'}</td>
+                            <td><input type="number" step="any" value={a.valore ?? ''} onChange={e => { const n = [...windAreas]; n[i] = { ...a, valore: num(e) }; setWindAreas(n); }} style={{ background: '#fff', padding: '4px 6px', fontSize: 12, width: 100 }} /></td>
+                            <td><input type="number" step="any" value={a.coordinata_x ?? ''} onChange={e => { const n = [...windAreas]; n[i] = { ...a, coordinata_x: num(e) }; setWindAreas(n); }} style={{ background: '#fff', padding: '4px 6px', fontSize: 12, width: 90 }} /></td>
+                            <td><input type="number" step="any" value={a.coordinata_y ?? ''} onChange={e => { const n = [...windAreas]; n[i] = { ...a, coordinata_y: num(e) }; setWindAreas(n); }} style={{ background: '#fff', padding: '4px 6px', fontSize: 12, width: 90 }} /></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                <div style={{ marginTop: 20 }}>
+                  <button onClick={saveWindAreas} className="btn btn-dark btn-sm">Salva e ricalcola</button>
+                </div>
+              </div>
+            </div>
+            {res && renderResultsTable('Risultato aree vento', [
+              { label: 'A_b', value: res.a_b }, { label: 'A_rc', value: res.a_rc }, { label: 'A_cb', value: res.a_cb },
+              { label: 'A_Pu', value: res.a_pu }, { label: 'Xcs tot', value: res.xcs_total }, { label: 'Ycs tot', value: res.ycs_total },
+            ], [
+              { key: 'label', label: 'Parte' },
+              { key: 'value', label: 'Valore', bold: true },
+            ])}
+          </>
+        );
+      case 'curve_carico':
+        return (
+          <>
+            <div className="card" style={{ marginBottom: 16 }}>
+              <div className="card-header">Curve di carico</div>
+              <div className="card-body">
+                {loadCurves.length === 0 ? <p style={{ color: 'var(--gray)', fontSize: 13 }}>Nessuna curva di carico inserita.</p> : (
+                  <div className="table-wrap">
+                    <table style={{ fontSize: 13 }}>
+                      <thead>
+                        <tr><th>Tipo</th><th>Raggio (m)</th><th>Carico max (kg)</th></tr>
+                      </thead>
+                      <tbody>
+                        {loadCurves.map((c, i) => (
+                          <tr key={c.id || i}>
+                            <td style={{ fontWeight: 600 }}>{c.tipo}</td>
+                            <td>{c.raggio_m}</td>
+                            <td><input type="number" step="any" value={c.carico_kg ?? ''} onChange={e => { const n = [...loadCurves]; n[i] = { ...c, carico_kg: num(e) }; setLoadCurves(n); }} style={{ background: '#fff', padding: '4px 6px', fontSize: 12, width: 100 }} /></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                <div style={{ marginTop: 20 }}>
+                  <button onClick={saveLoadCurves} className="btn btn-dark btn-sm">Salva e ricalcola</button>
+                </div>
+              </div>
+            </div>
+            {res?.points && renderResultsTable('Risultato curve di carico', res.points, [
+              { key: 'raggio', label: 'Raggio (m)' },
+              { key: 'carico_max', label: 'Carico max (kg)' },
+            ])}
+          </>
+        );
+      case 'baricentri':
+        return res && renderResultsTable('Baricentri', [
+          { label: 'X baricentro', value: res.x_cg }, { label: 'Y baricentro', value: res.y_cg }, { label: 'Z baricentro', value: res.z_cg },
+          { label: 'Massa totale', value: res.total_mass }, { label: 'Momento X', value: res.moment_x },
+          { label: 'Momento Y', value: res.moment_y }, { label: 'Momento Z', value: res.moment_z },
+        ], [
+          { key: 'label', label: 'Grandezza' },
+          { key: 'value', label: 'Valore', bold: true },
+        ]);
+      case 'vento':
+        return res && renderResultsTable('Vento', [
+          { label: 'Pressione normativa', value: res.p_norma }, { label: 'F braccio', value: res.fw_braccio }, { label: 'F rotazione', value: res.fw_rotazione },
+          { label: 'F controbraccio', value: res.fw_controbraccio }, { label: 'F carico', value: res.fw_carico },
+          { label: 'F totale', value: res.fw_total }, { label: 'Momento vento', value: res.moment_wind },
+        ], [
+          { key: 'label', label: 'Grandezza' },
+          { key: 'value', label: 'Valore', bold: true },
+        ]);
+      case 'stabilita_q':
+      case 'stabilita_d':
+        return res && renderResultsTable(stepKey === 'stabilita_q' ? 'Stabilità C25-Q' : 'Stabilità C25-D', res.conditions || [], [
+          { key: 'condition_id', label: 'Cond.', bold: true }, { key: 'v', label: 'V (kg)' }, { key: 'mr', label: 'Mr (kgm)' },
+          { key: 'mw', label: 'Mw (kgm)' }, { key: 'mtot', label: 'Mtot (kgm)' }, { key: 't', label: 'T (kg)' },
+          { key: 'safety_coefficient', label: 'Coeff. Sic.', bold: true }, { key: 'esito', label: 'Esito' },
+        ]);
+      case 'carichi_ralla':
+        return res && renderResultsTable('Carichi ralla', res.conditions || [], [
+          { key: 'condition_id', label: 'Cond.', bold: true }, { key: 'v', label: 'V (kg)' }, { key: 'mr', label: 'Mr (kgm)' },
+          { key: 'mw', label: 'Mw (kgm)' }, { key: 'mtot', label: 'Mtot (kgm)' }, { key: 't', label: 'T (kg)' },
+          { key: 'mtot_out_in_ratio', label: 'Mtot OUT/IN', bold: true },
+        ]);
+      case 'diagramma':
+        return res && renderResultsTable('Diagramma di carico', res.points || [], [
+          { key: 'raggio', label: 'Raggio (m)' }, { key: 'carico_max', label: 'Carico max (kg)' }, { key: 'carico_effettivo', label: 'Carico effettivo (kg)' },
+        ]);
+      default:
+        return null;
+    }
+  };
+
+  const isResultOnly = RESULT_STEPS.includes(stepKey);
+  const hasResult = !!results[stepKey];
 
   return (
     <div>
       <div className="page-header page-header-accent">
         <h1>Verifica calcolo</h1>
-        <p>Specchio esatto del file Excel — modifica input/formule, i risultati si aggiornano</p>
+        <p>Inserisci i dati del progetto, il motore Python calcola ogni step</p>
       </div>
 
       <div className="card" style={{ marginBottom: 20, padding: '12px 16px', display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -260,7 +419,7 @@ export default function Verifica() {
         <>
           <div className="step-bar" style={{ marginBottom: 24, minWidth: 700, overflowX: 'auto' }}>
             {STEPS.map((s, i) => (
-              <button key={s.sheet} onClick={() => goToStep(i)}
+              <button key={s.key} onClick={() => setCurrentStep(i)}
                 className={`step-item ${i < currentStep ? 'step-done' : i === currentStep ? 'step-current' : 'step-pending'}`}
                 style={{ border: 'none', cursor: 'pointer', textAlign: 'center' }}>{s.label}</button>
             ))}
@@ -268,8 +427,10 @@ export default function Verifica() {
 
           <div className="flex justify-between items-center flex-wrap gap-3" style={{ marginBottom: 16 }}>
             <div>
-              <span style={{ fontSize: 13, color: 'var(--gray)' }}>{stepSheet}</span>
-              <span style={{ fontSize: 12, color: '#9ca3af', marginLeft: 12 }}>{cells.length} celle ({inputs.length} input, {formulaCells.length} formule, {constants.length} costanti)</span>
+              <span style={{ fontSize: 13, color: 'var(--gray)' }}>{STEPS[currentStep].label}</span>
+              {isResultOnly && <span style={{ fontSize: 12, color: hasResult ? '#16a34a' : '#9ca3af', marginLeft: 12 }}>
+                {hasResult ? '✓ risultato calcolato' : 'nessun risultato'}
+              </span>}
             </div>
             <div style={{
               fontSize: 12, display: 'flex', alignItems: 'center', gap: 8,
@@ -277,125 +438,28 @@ export default function Verifica() {
               fontWeight: status === 'done' ? 600 : 400,
             }}>
               {status === 'saving' && <><span className="spinner" style={{ display: 'inline-block', width: 12, height: 12, border: '2px solid #0070C0', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} /> Salvataggio...</>}
-              {status === 'calculating' && <><span className="spinner" style={{ display: 'inline-block', width: 12, height: 12, border: '2px solid #D4A017', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} /> Calcolo formule...</>}
-              {status === 'done' && <><span style={{ color: '#16a34a' }}>✓</span> Formule aggiornate</>}
-              {status === 'idle' && (Object.keys(pendingInputs).length > 0 ? '✎ Modifiche in sospeso' : '')}
+              {status === 'calculating' && <><span className="spinner" style={{ display: 'inline-block', width: 12, height: 12, border: '2px solid #D4A017', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} /> Calcolo...</>}
+              {status === 'done' && <><span style={{ color: '#16a34a' }}>✓</span> Calcolo completato</>}
             </div>
+            <button onClick={recalculate} className="btn btn-dark btn-sm">⟳ Ricalcola tutti gli step</button>
           </div>
 
           {loading ? (
             <div className="card" style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>Caricamento...</div>
-          ) : cells.length === 0 ? (
-            <div className="card" style={{ textAlign: 'center', padding: 40, color: 'var(--gray)', fontSize: 13 }}>
-              Nessun dato per questo foglio.
-            </div>
           ) : (
-            <div className="card">
-              <div className="table-wrap" style={{ maxHeight: 550, overflowY: 'auto' }}>
-                <table style={{ fontSize: 11 }}>
-                  <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
-                    <tr>
-                      <th style={{ width: 24 }}>#</th>
-                      <th style={{ width: 55, color: '#D4A017' }}>Cella</th>
-                      <th style={{ width: 36 }}>T</th>
-                      <th style={{ minWidth: 260 }}>Etichetta</th>
-                      <th style={{ minWidth: 120 }}>Valore / Input</th>
-                      <th style={{ minWidth: 120 }}>Dettaglio {user.is_admin && <span style={{ fontWeight: 400, fontSize: 9, color: '#9ca3af' }}>(clicca formula per modificare)</span>}</th>
-                      <th style={{ width: 90 }}>Risultato</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sortedRows.map(([rowNum, rowCells]) => {
-                      const labelCells = rowCells.filter(c => c.cell_type === 'label');
-                      const valueCells = rowCells.filter(c => c.cell_type !== 'label');
-                      return valueCells.map((c, ci) => {
-                        const isInput = c.cell_type === 'input' || c.cell_type === 'constant';
-                        const isFormula = c.cell_type === 'formula';
-                        const calcVal = resultsValues?.[c.campo];
-                        const isEditing = editId === c.id;
-                        const rowLabel = c.label || (labelCells.length > 0 ? labelCells.map(l => l.default_value || l.formula).join(' ').trim() : '');
-                        const showRowNum = ci === 0;
-                        const curVal = inputValues[c.campo] !== undefined ? inputValues[c.campo] : (c.default_value || '');
-                        const pendingVal = pendingInputs[c.campo];
-                        const hasPending = pendingVal !== undefined;
-                        const displayVal = hasPending ? pendingVal : curVal;
-
-                        return (
-                        <tr key={c.id || c.campo}
-                          style={{ background: isInput ? '#E3F0FF' : '#fff', borderBottom: '1px solid #eef2f6' }}>
-                          <td style={{ color: '#9ca3af', fontSize: 10, fontFamily: 'monospace', textAlign: 'center' }}>{showRowNum && <span>{rowNum}</span>}</td>
-                          <td style={{ fontFamily: 'monospace', fontWeight: 600, fontSize: 10, color: isInput ? '#0070C0' : '#1e1e2e' }}>{c.campo}</td>
-                          <td>{isInput ? <span style={{ display: 'inline-block', padding: '1px 3px', borderRadius: 2, fontSize: 8, fontWeight: 700, background: '#0070C0', color: '#fff' }}>IN</span>
-                            : <span style={{ display: 'inline-block', padding: '1px 3px', borderRadius: 2, fontSize: 8, fontWeight: 700, border: '1.5px solid #1e1e2e' }}>FX</span>}</td>
-                          <td style={{ color: '#374151', fontSize: 12, maxWidth: 350, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={rowLabel}>{rowLabel || c.campo}</td>
-                          <td>
-                            {isInput ? (
-                              <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                                <input type="text"
-                                  value={displayVal}
-                                  placeholder="0"
-                                  style={{
-                                    flex: 1, minWidth: 70, maxWidth: 110, padding: '3px 6px', fontSize: 12, fontFamily: 'monospace', fontWeight: 600,
-                                    border: hasPending ? '2px solid #D4A017' : '2px solid #0070C0', borderRadius: 4,
-                                    background: hasPending ? '#FFFDE7' : '#F0F7FF', color: '#0070C0', boxSizing: 'border-box',
-                                  }}
-                                  onChange={e => setPendingInputs(prev => ({...prev, [c.campo]: e.target.value}))} />
-                                {hasPending ? (
-                                  <>
-                                    <button onClick={() => confirmInput(c.campo)} className="btn btn-xs btn-dark" style={{ padding: '2px 6px', fontSize: 10 }}>Ok</button>
-                                    <button onClick={() => cancelInput(c.campo)} className="btn btn-xs btn-ghost" style={{ padding: '2px 6px', fontSize: 10 }}>X</button>
-                                  </>
-                                ) : null}
-                              </div>
-                            ) : (
-                              <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 500, color: '#6b7280', padding: '4px 0' }}>{c.formula}</span>
-                            )}
-                          </td>
-                          <td>
-                            {isEditing ? (
-                              <div className="flex gap-2" style={{ alignItems: 'center' }}>
-                                <input value={editText} onChange={e => setEditText(e.target.value)}
-                                  style={{ flex: 1, padding: 3, border: '1.5px solid var(--yellow)', borderRadius: 3, fontSize: 10, fontFamily: 'monospace', minWidth: 120 }} />
-                                <button onClick={() => saveFormula(c.id, editText)} className="btn btn-xs btn-dark">Ok</button>
-                                <button onClick={() => setEditId(null)} className="btn btn-xs btn-ghost">X</button>
-                              </div>
-                            ) : (
-                              <code onClick={() => { if (user.is_admin && isFormula) { setEditId(c.id); setEditText(c.formula); } }}
-                                style={{
-                                  fontSize: 10, fontFamily: 'monospace', color: '#1e1e2e', wordBreak: 'break-all',
-                                  cursor: user.is_admin && isFormula ? 'pointer' : 'default',
-                                  textDecoration: user.is_admin && isFormula ? 'underline dotted #9ca3af' : 'none',
-                                }}>
-                                {isInput ? displayVal : c.formula}
-                              </code>
-                            )}
-                          </td>
-                          <td style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 12 }}>
-                            {isInput ? (
-                              <span style={{ color: '#0070C0' }}>{displayVal}</span>
-                            ) : calcVal !== undefined ? (
-                              <span style={{ color: '#1e1e2e' }} title={`Formula: ${c.formula}`}>
-                                <span style={{ fontSize: 9, opacity: 0.5, marginRight: 2 }}>ƒx</span>
-                                {typeof calcVal === 'number' ? calcVal.toLocaleString() : calcVal}
-                              </span>
-                            ) : (
-                              <span style={{ color: '#d1d5db' }}>—</span>
-                            )}
-                          </td>
-                        </tr>
-                      );});
-                    })}
-                  </tbody>
-                </table>
+            renderStepContent() || (
+              <div className="card" style={{ textAlign: 'center', padding: 40, color: 'var(--gray)', fontSize: 13 }}>
+                Nessun risultato per questo step. Completa i passi di input e premi "Ricalcola".
               </div>
-              <div className="flex gap-3 items-center" style={{ padding: 12, borderTop: '1px solid #e5e7eb' }}>
-                {currentStep > 0 && <button onClick={() => goToStep(currentStep - 1)} className="btn btn-ghost btn-sm">← Precedente</button>}
-                {currentStep < STEPS.length - 1 && <button onClick={() => goToStep(currentStep + 1)} className="btn btn-ghost btn-sm">Successivo →</button>}
-                <div style={{ flex: 1 }} />
-                <span style={{ fontSize: 11, color: '#9ca3af' }}>Foglio {currentStep + 1} di {STEPS.length}</span>
-              </div>
-            </div>
+            )
           )}
+
+          <div className="flex gap-3 items-center" style={{ padding: '16px 0' }}>
+            {currentStep > 0 && <button onClick={() => setCurrentStep(currentStep - 1)} className="btn btn-ghost btn-sm">← Precedente</button>}
+            <div style={{ flex: 1 }} />
+            <span style={{ fontSize: 11, color: '#9ca3af' }}>Step {currentStep + 1} di {STEPS.length}</span>
+            {currentStep < STEPS.length - 1 && <button onClick={() => setCurrentStep(currentStep + 1)} className="btn btn-ghost btn-sm">Successivo →</button>}
+          </div>
         </>
       )}
     </div>

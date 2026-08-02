@@ -2,9 +2,9 @@ import { Link } from 'react-router-dom';
 import { useState } from 'react';
 
 const faqs = [
-  { q: "Cos'è SGT?", a: "SGT (Stabilità delle Gru a Torre) è un software SaaS per la verifica di stabilità delle gru a torre secondo le normative C25/FEM. Trasforma il tradizionale foglio Excel in un'applicazione web moderna con calcolo automatico." },
+  { q: "Cos'è SGT?", a: "SGT (Stabilità delle Gru a Torre) è un software SaaS per la verifica di stabilità delle gru a torre secondo le normative C25/FEM. Un motore di calcolo Python, sviluppato con l'ingegnere, esegue tutte le verifiche in modo automatico e trasparente." },
   { q: 'Come si usa?', a: 'Segui il wizard a 6 passi: inserisci i dati della macchina, geometria, masse, curve carico, aree vento e coefficienti. Il sistema calcola automaticamente tutti gli step e mostra i risultati in dashboard chiare.' },
-  { q: 'Posso importare le formule dal mio Excel?', a: "Sì. Dalla sezione Impostazioni puoi caricare il tuo file .xlsm aggiornato. Le 55.000+ formule vengono importate automaticamente senza ricodifica manuale." },
+  { q: 'Come vengono gestite le formule di calcolo?', a: "La struttura logica dei calcoli è scritta e versionata direttamente nel motore Python. I coefficienti numerici (margini di sicurezza, soglie, costanti) sono configurabili dall'amministratore da un pannello dedicato, con flusso di bozza e pubblicazione." },
   { q: 'Quanto costa?', a: "Contattaci per un preventivo personalizzato. Offriamo piani mensili, annuali e enterprise con possibilità di installazione su proprio server." },
   { q: 'I miei dati sono sicuri?', a: 'Sì. Ogni utente ha il proprio spazio isolato. I progetti sono visibili solo al proprietario. Password crittografate con bcrypt. Architettura multi-tenant.' },
 ];
@@ -108,9 +108,9 @@ export default function Home() {
       {/* Stats */}
       <section style={{ padding: '60px 24px', background: '#D4A017' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 24, textAlign: 'center' }}>
-          <div><div style={{ fontSize: 36, fontWeight: 800, color: '#fff' }}>55.031</div><div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)' }}>Formule importate</div></div>
           <div><div style={{ fontSize: 36, fontWeight: 800, color: '#fff' }}>8</div><div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)' }}>Step di calcolo</div></div>
-          <div><div style={{ fontSize: 36, fontWeight: 800, color: '#fff' }}>18</div><div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)' }}>Fogli Excel</div></div>
+          <div><div style={{ fontSize: 36, fontWeight: 800, color: '#fff' }}>Python</div><div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)' }}>Motore di calcolo</div></div>
+          <div><div style={{ fontSize: 36, fontWeight: 800, color: '#fff' }}>23</div><div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)' }}>Coefficienti configurabili</div></div>
           <div><div style={{ fontSize: 36, fontWeight: 800, color: '#fff' }}>6</div><div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)' }}>Passi wizard</div></div>
         </div>
       </section>
@@ -119,10 +119,10 @@ export default function Home() {
       <section style={{ padding: '60px 24px', maxWidth: 1100, margin: '0 auto' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20 }}>
           {[
-            { icon: '📊', title: '55.000+ formule', desc: 'Importa le formule dal tuo Excel senza ricodifica. Le stesse identiche formule del foglio di calcolo originale.', link: '/come-funziona' },
+            { icon: '🐍', title: 'Motore di calcolo Python', desc: 'Baricentri, vento, stabilità C25-Q/D, carichi ralla e diagramma eseguiti da moduli Python, versionati con git.', link: '/come-funziona' },
             { icon: '⚡', title: '8 step automatici', desc: 'Da baricentri a diagramma di carico. Il backend esegue tutto in sequenza, senza intervento manuale.', link: '/come-funziona' },
-            { icon: '🔍', title: 'Formule visibili', desc: 'Ogni calcolo è trasparente. Puoi vedere e verificare ogni formula. L\'ingegnere controlla tutto dal frontend.', link: '/formule' },
-            { icon: '🔄', title: 'Sincronizzazione Excel', desc: 'Modifichi l\'Excel, carichi il file e il SaaS si aggiorna. Il tuo ingegnere lavora con i suoi strumenti.', link: '/come-funziona' },
+            { icon: '🔍', title: 'Coefficienti configurabili', desc: 'Soglie e margini numerici modificabili dal pannello admin con flusso di bozza e pubblicazione.', link: '/come-funziona' },
+            { icon: '📊', title: 'Trasparenza totale', desc: 'Ogni passo di calcolo è consultabile nel frontend e ogni verifica è riproducibile.', link: '/come-funziona' },
           ].map(s => (
             <Link key={s.title} to={s.link} style={{ padding: 24, background: '#f9fafb', borderRadius: 10, textDecoration: 'none', color: 'inherit', border: '1px solid #e5e7eb' }}>
               <div style={{ fontSize: 28, marginBottom: 8 }}>{s.icon}</div>
@@ -159,9 +159,9 @@ export default function Home() {
         <h2 style={{ fontSize: 28, textAlign: 'center', marginBottom: 40 }}>Perché scegliere SGT</h2>
         <div style={{ display: 'grid', gap: 20, maxWidth: 700, margin: '0 auto' }}>
           {[
-            { icon: '📊', title: '55.000+ formule importate dall\'Excel', desc: 'Le stesse identiche formule del tuo foglio di calcolo. Nessuna ricodifica manuale. Carica il file .xlsm e il sistema si sincronizza.' },
-            { icon: '🔍', title: 'Trasparenza totale dei calcoli', desc: 'Ogni formula è visibile dal frontend con un clic sul pulsante [fx]. Ingegneri e tecnici possono verificare ogni passaggio.' },
-            { icon: '🔄', title: 'Aggiornamento da Excel', desc: 'Il tuo ingegnere modifica l\'Excel, carica il file aggiornato da Impostazioni e il SaaS si aggiorna. Zero programmazione.' },
+            { icon: '🐍', title: 'Motore di calcolo Python', desc: 'La struttura logica dei calcoli è scritta nel codice Python e versionata con git. Sviluppato progressivamente con il tuo ingegnere.' },
+            { icon: '🔍', title: 'Trasparenza totale dei calcoli', desc: 'Ogni step di calcolo è consultabile nel frontend (pagina Verifica). I coefficienti numerici sono configurabili dal pannello admin.' },
+            { icon: '🎚️', title: 'Bozza e pubblicazione', desc: 'L\'admin modifica i coefficienti in bozza e li pubblica in modo esplicito: il motore usa solo i valori pubblicati, con storico versioni.' },
             { icon: '📱', title: 'Accessibile ovunque', desc: 'SaaS via browser. Docker sul server. Funziona da qualsiasi dispositivo. Sempre aggiornato.' },
             { icon: '🔒', title: 'Sicurezza e isolamento', desc: 'Ogni utente ha il proprio spazio. Progetti visibili solo al proprietario. Password crittografate. Architettura multi-tenant.' },
             { icon: '📋', title: 'Risultati chiari e professionali', desc: 'Dashboard stabilità Q/D, carichi ralla, diagramma carico. Tabelle, grafici e indicatori OK/KO. Pronti per il dossier.' },

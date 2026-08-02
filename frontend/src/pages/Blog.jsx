@@ -12,8 +12,8 @@ const posts = [
   },
   {
     slug: 'da-excel-a-saas',
-    title: 'Dal foglio Excel al SaaS: 55.031 formule trasformate',
-    excerpt: 'Abbiamo analizzato il file Excel di calcolo stabilità, estratto tutte le formule da 18 fogli di lavoro e le abbiamo importate in un database SQLite. Il risultato: 55.031 formule perfettamente identiche all\'originale.',
+    title: 'Dal foglio Excel al SaaS: il motore Python',
+    excerpt: 'Il calcolo di stabilità è passato da un file Excel con DLL esterne a un motore Python versionato con git e sviluppato progressivamente con l\'ingegnere strutturista. I coefficienti numerici sono configurabili da pannello admin.',
     date: '8 Luglio 2026',
     read: '4 min',
     tags: ['Tecnologia', 'SaaS'],
@@ -29,7 +29,7 @@ const posts = [
   {
     slug: 'wizard-6-passi',
     title: 'Wizard a 6 passi: come inserire i dati per il calcolo',
-    excerpt: 'Il wizard di SGT guida l\'utente attraverso 6 passaggi: caratteristiche macchina, geometria braccio, masse proprie, curve di carico, aree vento e coefficienti stabilità. Ogni passo corrisponde a un foglio dell\'Excel originale.',
+    excerpt: 'Il wizard di SGT guida l\'utente attraverso 6 passaggi: caratteristiche macchina, geometria braccio, masse proprie, curve di carico, aree vento e coefficienti stabilità.',
     date: '20 Giugno 2026',
     read: '3 min',
     tags: ['Guida', 'Wizard'],
@@ -45,7 +45,7 @@ const posts = [
   {
     slug: 'dll-rimpiazzate-python',
     title: 'DLL Windows rimpiazzate da Python: PW_NORMA, MW_TORRE e le altre',
-    excerpt: 'L\'Excel originale utilizzava 5 DLL Windows per funzioni normative. Le abbiamo reimplementate in Python puro, senza bisogno di decompilazione. Le formule che le chiamano funzionano identiche.',
+    excerpt: 'L\'Excel originale utilizzava DLL Windows per funzioni normative. Nel motore Python di SGT sono reimplementate direttamente nei moduli di calcolo, con fattori configurabili da pannello admin.',
     date: '1 Giugno 2026',
     read: '5 min',
     tags: ['Tecnologia', 'Python'],

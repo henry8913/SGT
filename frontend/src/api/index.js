@@ -8,6 +8,6 @@ export {
   windAreas,
   stability,
   loadCurves,
-  formulas,
+  coefficients,
   calculate,
 } from './client';

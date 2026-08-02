@@ -79,12 +79,13 @@ export const loadCurves = {
   delete: (pid, id) => api.delete(`/projects/${pid}/load-curves/${id}`),
 };
 
-export const formulas = {
-  list: (params) => api.get('/formulas', { params: typeof params === 'object' ? params : { step: params } }),
-  get: (id) => api.get(`/formulas/${id}`),
-  create: (data) => api.post('/formulas', data),
-  update: (id, data) => api.put(`/formulas/${id}`, data),
-  delete: (id) => api.delete(`/formulas/${id}`),
+export const coefficients = {
+  list: (params) => api.get('/coefficients', { params }),
+  moduli: () => api.get('/coefficients/moduli'),
+  create: (data) => api.post('/coefficients', data),
+  updateDraft: (id, data) => api.put(`/coefficients/${id}`, data),
+  publish: (id) => api.post(`/coefficients/${id}/pubblica`),
+  remove: (id) => api.delete(`/coefficients/${id}`),
 };
 
 export const calculate = {

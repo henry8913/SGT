@@ -4,7 +4,7 @@ const steps = [
   { num: 1, title: 'Caratteristiche macchina', desc: 'Inserisci sbraccio massimo (65 m), carichi utili (1800 kg punta, 10000 kg max), altezze, diametri funi. Sono i dati base della gru da cui parte tutto il calcolo.' },
   { num: 2, title: 'Geometria braccio', desc: 'Quote geometriche complete: interassi verticali/orizzontali in mm, nomi profili per ogni elemento (es. Tubolare quadro 160x160x16), tipologia sezione e coordinate struttura reticolare.' },
   { num: 3, title: 'Masse proprie', desc: 'Masse di tutti i componenti: carrello, argani, quadri, funi. Ogni massa ha la sua posizione in metri e un flag di utilizzo (\"-\" se non usato).' },
-  { num: 4, title: 'Curve di carico', desc: 'Carichi massimi sollevabili per ogni raggio da 5m a 65m, distinti per tiro II e tiro II/IV. I dati vengono inseriti dall\'utente o importati.' },
+  { num: 4, title: 'Curve di carico', desc: 'Carichi massimi sollevabili per ogni raggio da 5m a 65m, distinti per tiro II e tiro II/IV. I dati vengono inseriti dall\'utente.' },
   { num: 5, title: 'Aree vento', desc: 'Coefficienti aree vento per quattro sottopagine: A_b (braccio), A_rc (rotazione centrale), A_cb (controbraccio), A_Pu (carico utile). Con coordinate centri di spinta.' },
   { num: 6, title: 'Coefficienti stabilità', desc: 'Interasse carro, numero rinvii, masse torre, coefficienti eccentricità, pressione vento normativa e coefficienti parziali di sicurezza J30, J35, J37, J329.' },
 ];
@@ -27,7 +27,7 @@ export default function ComeFunziona() {
       <section style={{ maxWidth: 900, margin: '0 auto', padding: '60px 24px' }}>
         <h2 style={{ fontSize: 24, marginBottom: 8, textAlign: 'center' }}>Wizard a 6 passi</h2>
         <p style={{ color: '#6b7280', fontSize: 14, textAlign: 'center', marginBottom: 40, maxWidth: 600, margin: '0 auto 40px' }}>
-          L'utente inserisce i dati seguendo un ordine preciso, corrispondente ai fogli blu dell'Excel originale.
+          L'utente inserisce i dati seguendo un ordine preciso, passaggio dopo passaggio.
         </p>
         <div style={{ display: 'grid', gap: 16 }}>
           {steps.map(s => (
@@ -66,24 +66,15 @@ export default function ComeFunziona() {
         </div>
       </section>
 
-      {/* Formule */}
+      {/* Coefficienti */}
       <section style={{ maxWidth: 900, margin: '0 auto', padding: '60px 24px', textAlign: 'center' }}>
-        <h2 style={{ fontSize: 24, marginBottom: 12 }}>55.031 formule importate dall'Excel</h2>
+        <h2 style={{ fontSize: 24, marginBottom: 12 }}>Motore Python e coefficienti</h2>
         <p style={{ color: '#6b7280', fontSize: 14, maxWidth: 600, margin: '0 auto 24px', lineHeight: 1.7 }}>
-          Le formule non sono hardcoded nel codice. Sono importate direttamente dal tuo file .xlsm
-          e salvate nel database. Puoi vederle tutte, verificarle e aggiornarle semplicemente
-          ricaricando il file Excel aggiornato.
+          La struttura logica dei calcoli è scritta nel codice Python dei moduli, versionata con git
+          e sviluppata progressivamente insieme all'ingegnere strutturista. I coefficienti numerici
+          (margini di sicurezza, soglie, costanti) sono configurabili da un pannello riservato
+          all'amministratore, con flusso di bozza e pubblicazione e storico delle versioni.
         </p>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <div style={{ padding: '6px 14px', background: '#f9fafb', borderRadius: 6, fontSize: 12, border: '1px solid #e5e7eb' }}>Baricentri: 588</div>
-          <div style={{ padding: '6px 14px', background: '#f9fafb', borderRadius: 6, fontSize: 12, border: '1px solid #e5e7eb' }}>Aree vento: 1.266</div>
-          <div style={{ padding: '6px 14px', background: '#f9fafb', borderRadius: 6, fontSize: 12, border: '1px solid #e5e7eb' }}>Vento: 59</div>
-          <div style={{ padding: '6px 14px', background: '#f9fafb', borderRadius: 6, fontSize: 12, border: '1px solid #e5e7eb' }}>Stab C25-Q: 22.644</div>
-          <div style={{ padding: '6px 14px', background: '#f9fafb', borderRadius: 6, fontSize: 12, border: '1px solid #e5e7eb' }}>Stab C25-D: 22.684</div>
-          <div style={{ padding: '6px 14px', background: '#f9fafb', borderRadius: 6, fontSize: 12, border: '1px solid #e5e7eb' }}>Carichi ralla: 4.848</div>
-          <div style={{ padding: '6px 14px', background: '#f9fafb', borderRadius: 6, fontSize: 12, border: '1px solid #e5e7eb' }}>Curve carico: 758</div>
-          <div style={{ padding: '6px 14px', background: '#f9fafb', borderRadius: 6, fontSize: 12, border: '1px solid #e5e7eb' }}>Diagramma: 1.359</div>
-        </div>
       </section>
     </PageLayout>
   );

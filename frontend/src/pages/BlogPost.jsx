@@ -36,27 +36,27 @@ const allPosts = [
   },
   {
     slug: 'da-excel-a-saas',
-    title: 'Dal foglio Excel al SaaS: 55.031 formule trasformate',
+    title: 'Dal foglio Excel al SaaS: il motore Python',
     content: `
-      Abbiamo analizzato il file Excel di calcolo stabilità, estratto tutte le formule da 18 fogli di lavoro e le abbiamo importate in un database SQLite.
+      Il calcolo di stabilità è passato da un file Excel con DLL esterne a un motore di calcolo Python, versionato con git e sviluppato progressivamente insieme all'ingegnere strutturista.
 
       ## Il processo
 
-      1. Analisi del file Excel: identificazione di ogni cella con formula
-      2. Estrazione automatica di 55.031 formule da 18 fogli
-      3. Importazione nel database con associazione a step e campo
-      4. Verifica della corrispondenza esatta al 100%
+      1. Analisi del foglio di calcolo originale come riferimento per capire cosa implementare
+      2. Scrittura della struttura logica di ogni step (baricentri, vento, stabilità, ...) nei moduli Python
+      3. Configurazione dei coefficienti numerici (margini, soglie, costanti) da pannello admin
+      4. Verifica dei risultati passo per passo con l'ingegnere
 
       ## Il risultato
 
-      Il motore di calcolo di SGT non ha formule hardcoded: legge le formule dal database e le valuta dinamicamente. Questo significa che:
-      - Le formule sono identiche all'originale Excel
-      - Puoi verificarle una per una dal frontend
-      - Puoi aggiornarle semplicemente ricaricando il file Excel
+      Il motore di calcolo di SGT esegue le verifiche direttamente in Python, senza importare formule dinamiche. Questo significa che:
+      - La struttura logica è versionata e testabile
+      - I coefficienti numerici sono configurabili dall'admin con flusso di bozza e pubblicazione
+      - Ogni step di calcolo è consultabile nel frontend
 
       ## Vantaggi per l'ingegnere
 
-      L'ingegnere continua a lavorare con Excel, il suo strumento di fiducia. Quando modifica il file, lo carica su SGT e il sistema si sincronizza automaticamente. Nessuna programmazione richiesta.
+      L'ingegnere e il team definiscono insieme, passo dopo passo, ogni modulo di calcolo. I coefficienti numerici possono essere tarati dal pannello amministratore senza toccare il codice.
     `,
     date: '8 Luglio 2026',
     read: '4 min',
@@ -106,8 +106,9 @@ const allPosts = [
 
       ## Input utente vs calcoli automatici
 
-      I campi con sfondo grigio chiaro sono input utente (ex celle blu dell'Excel).
-      I campi calcolati (ex formule nere) mostrano il pulsante [fx] per visualizzare la formula.
+      I dati inseriti dall'utente (macchina, geometria, masse, curve, aree vento, coefficienti) vengono salvati
+      nel progetto e usati dal motore Python per calcolare ogni step. La pagina Verifica permette di consultare
+      input e risultati di ogni step, passo per passo.
 
       ## Dopo il wizard
 
@@ -136,7 +137,7 @@ const allPosts = [
       - **Dati sempre aggiornati** — unica versione, sempre disponibile
       - **Collaborazione** — più utenti, stesso progetto
       - **Backup automatico** — dati sicuri su volume persistente
-      - **Formule trasparenti** — visibili e verificabili con un clic
+      - **Calcoli trasparenti** — ogni step è consultabile e i coefficienti sono configurabili dall'admin
 
       Con SGT mantieni la stessa precisione di calcolo dell'Excel, aggiungendo accessibilità, sicurezza e collaborazione.
     `,
@@ -146,31 +147,29 @@ const allPosts = [
   },
   {
     slug: 'dll-rimpiazzate-python',
-    title: 'DLL Windows rimpiazzate da Python: PW_NORMA, MW_TORRE e le altre',
+    title: 'DLL Windows rimpiazzate da Python: pressione del vento e le altre',
     content: `
-      L'Excel originale utilizzava 5 DLL Windows per funzioni normative. Le abbiamo reimplementate in Python puro.
+      L'Excel originale utilizzava DLL Windows per alcune funzioni normative (pressione del vento, momenti su torre).
+      Nel motore Python di SGT queste funzioni sono reimplementate direttamente nei moduli di calcolo, senza dipendenze esterne.
 
-      ## Le funzioni DLL
+      ## Le funzioni normative
 
-      - **PW_NORMA(q_ref, h)**: pressione vento normativa secondo C25/FEM
-      - **MW_TORRE(m, e, ecc)**: momento vento su torre (in servizio)
-      - **MW_OUT_TORRE(h, ecc, q)**: momento vento su torre (fuori servizio)
-      - **TW_TORRE(m, e, ecc)**: tiro/trazione su torre (in servizio)
-      - **TW_OUT_TORRE(h, ecc, q)**: tiro/trazione su torre (fuori servizio)
+      - **Pressione del vento normativa** (C25/FEM): legge a tratti in base all'altezza, con fattori configurabili
+      - **Momenti del vento** sul braccio e sulla torre
+      - **Tiri/trazioni** in configurazione in servizio e fuori servizio
 
       ## Come funziona
 
-      Le formule nel database chiamano queste funzioni normalmente:
-      \`PW_NORMA(J329, M10)\`
-
-      Il parser riconosce i nomi delle funzioni built-in e chiama l'implementazione Python corrispondente.
+      Ogni funzione è implementata in un modulo Python del motore. I fattori e le soglie numeriche
+      (es. pressione di riferimento, coefficienti) sono letti dalla tabella coefficienti e sono
+      configurabili dal pannello amministratore, con flusso di bozza e pubblicazione.
 
       ## Vantaggi
 
       - Nessuna dipendenza da DLL Windows
       - Funziona su qualsiasi piattaforma (Linux, macOS, Windows)
-      - Le funzioni sono modificabili nel codice Python
-      - Le formule che le chiamano rimangono identiche all'originale
+      - Le funzioni sono versionate con git insieme al resto del motore
+      - I coefficienti numerici sono tarabili dall'admin senza toccare il codice
     `,
     date: '1 Giugno 2026',
     read: '5 min',
