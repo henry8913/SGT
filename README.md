@@ -72,7 +72,3 @@ ADMIN__MAIL=admin@local.it
 ADMIN__USERNAME=admin
 ADMIN__PASSWORD=CambiaQuestaPassword!
 ```
-
-## Caricare formule aggiornate da Excel
-
-Vai su **Impostazioni → Carica Excel** nel frontend.

@@ -24,7 +24,7 @@ export default function Layout({ children }) {
     { to: '/dashboard', label: 'Progetti' },
     { to: '/formule', label: 'Formule' },
     { to: '/verifica', label: 'Verifica' },
-    { to: '/settings/profili', label: 'Carica Excel' },
+    { to: '/settings/profili', label: 'Profili' },
     { to: '/settings/password', label: 'Password' },
     ...(user.is_admin ? [{ to: '/admin/users', label: 'Admin' }] : []),
   ];

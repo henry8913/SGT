@@ -287,7 +287,7 @@ export default function Verifica() {
             <div className="card" style={{ textAlign: 'center', padding: 40, color: 'var(--gray)' }}>Caricamento...</div>
           ) : cells.length === 0 ? (
             <div className="card" style={{ textAlign: 'center', padding: 40, color: 'var(--gray)', fontSize: 13 }}>
-              Nessun dato per questo foglio. Vai su <strong>Impostazioni → Carica Excel</strong> per importare le formule.
+              Nessun dato per questo foglio.
             </div>
           ) : (
             <div className="card">

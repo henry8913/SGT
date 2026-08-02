@@ -65,13 +65,12 @@ export default function Formule() {
     <div>
       <div className="page-header page-header-accent">
         <h1>Formule</h1>
-        <p>{allFormulas.length > 0 ? `${allFormulas.length.toLocaleString()} formule caricate dal file Excel` : 'Caricamento...'}</p>
+        <p>{allFormulas.length > 0 ? `${allFormulas.length.toLocaleString()} formule disponibili` : 'Caricamento...'}</p>
       </div>
 
       <div className="msg msg-info" style={{ marginBottom: 20 }}>
         <strong>🔍 Verifica calcolo.</strong> Seleziona uno step qui sotto per vedere tutte le formule.
-        Confronta con il file Excel originale. Se trovi un errore, correggi l'Excel e carica il file
-        aggiornato da <strong>Impostazioni → Carica Excel</strong>.
+        Confronta con il file Excel originale come riferimento.
       </div>
 
       {/* Step pills */}
