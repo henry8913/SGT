@@ -24,6 +24,7 @@ import SettingsProfili from './pages/Settings/Profili';
 import Password from './pages/Settings/Password';
 import AdminUsers from './pages/Admin/Users';
 import Coefficienti from './pages/Admin/Coefficienti';
+import MotoreCalcolo from './pages/Admin/MotoreCalcolo';
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem('token');
@@ -68,6 +69,7 @@ export default function App() {
         <Route path="/settings/password" element={<ProtectedRoute><Layout><Password /></Layout></ProtectedRoute>} />
         <Route path="/admin/users" element={<AdminRoute><Layout><AdminUsers /></Layout></AdminRoute>} />
         <Route path="/admin/coefficienti" element={<AdminRoute><Layout><Coefficienti /></Layout></AdminRoute>} />
+        <Route path="/admin/motore" element={<AdminRoute><Layout><MotoreCalcolo /></Layout></AdminRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

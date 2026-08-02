@@ -28,6 +28,7 @@ export default function Layout({ children }) {
     ...(user.is_admin ? [
       { to: '/admin/users', label: 'Admin' },
       { to: '/admin/coefficienti', label: 'Coefficienti' },
+      { to: '/admin/motore', label: 'Motore' },
     ] : []),
   ];
 

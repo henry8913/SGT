@@ -10,6 +10,7 @@ from app.models.user import User
 from app.models.beam_profile import BeamProfile
 from app.models.unit_conversion import UnitConversion
 from app.models.coefficient import Coefficient
+from app.models.module_note import ModuleNote
 
 __all__ = [
     "Project",
@@ -24,4 +25,5 @@ __all__ = [
     "BeamProfile",
     "UnitConversion",
     "Coefficient",
+    "ModuleNote",
 ]

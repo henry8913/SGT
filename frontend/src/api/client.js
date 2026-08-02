@@ -88,6 +88,11 @@ export const coefficients = {
   remove: (id) => api.delete(`/coefficients/${id}`),
 };
 
+export const moduleDocs = {
+  get: () => api.get('/module-docs'),
+  saveNote: (data) => api.put('/module-docs/notes', data),
+};
+
 export const calculate = {
   run: (pid) => api.post(`/projects/${pid}/calcola`),
   results: (pid) => api.get(`/projects/${pid}/risultati`),

@@ -9,5 +9,6 @@ export {
   stability,
   loadCurves,
   coefficients,
+  moduleDocs,
   calculate,
 } from './client';
